@@ -7,3 +7,6 @@ coverage
 .env
 .env.local
 .vercel
+
+# TypeScript build cache
+*.tsbuildinfo
