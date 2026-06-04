@@ -140,10 +140,30 @@ const DISTANCE_WEIGHTS: Record<keyof MoodProfile, number> = {
   valence: 0.8,
 };
 
+/**
+ * Dimensions where moving *past* the target in the beneficial direction is not
+ * a problem and must not be penalised: less stress, less heaviness and more
+ * valence are always welcome. Energy and stability stay symmetric, because
+ * overshooting them (e.g. over-activating an already wired profile) genuinely
+ * degrades the state. Without this, a practice that reduces stress *strongly*
+ * is unfairly scored worse than a milder one purely for "overshooting" zero.
+ */
+const FREE_OVERSHOOT: Partial<Record<keyof MoodProfile, 'below' | 'above'>> = {
+  stress: 'below',
+  heaviness: 'below',
+  valence: 'above',
+};
+
 function weightedDistance(a: MoodProfile, b: MoodProfile): number {
   let d = 0;
   for (const key of Object.keys(DISTANCE_WEIGHTS) as (keyof MoodProfile)[]) {
-    d += DISTANCE_WEIGHTS[key] * Math.abs(a[key] - b[key]);
+    const diff = a[key] - b[key];
+    const free = FREE_OVERSHOOT[key];
+    let dist: number;
+    if (free === 'below' && diff < 0) dist = 0;
+    else if (free === 'above' && diff > 0) dist = 0;
+    else dist = Math.abs(diff);
+    d += DISTANCE_WEIGHTS[key] * dist;
   }
   return d;
 }
