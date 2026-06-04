@@ -296,6 +296,14 @@ h2 {
   font-weight: 500;
 }
 
+.debug tr.row-primary td {
+  background: var(--accent-soft);
+}
+
+.debug tr.row-primary td:first-child {
+  font-weight: 600;
+}
+
 .debug .excluded {
   font-size: 13px;
   color: var(--text-muted);
@@ -882,6 +890,41 @@ h2 {
   margin-top: 0;
 }
 
+.calc-summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.calc-summary::-webkit-details-marker {
+  display: none;
+}
+
+.calc-summary h2 {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.calc-summary h2::before {
+  content: '▸';
+  color: var(--accent);
+  font-size: 14px;
+  transition: transform 0.15s;
+}
+
+.calc[open] .calc-summary h2::before {
+  transform: rotate(90deg);
+}
+
+.calc-summary-hint {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
 .calc-step {
   border-top: 1px solid var(--border);
   padding-top: 16px;
@@ -945,6 +988,21 @@ h2 {
   font-variant-numeric: tabular-nums;
 }
 
+/* Step 1 table: center every value cell + header for an at-a-glance matrix. */
+.calc-table-centered th,
+.calc-table-centered td {
+  text-align: center;
+}
+
+.calc-table-centered td:first-child,
+.calc-table-centered th:first-child {
+  text-align: left;
+}
+
+.calc-table-centered .num {
+  text-align: center;
+}
+
 .calc-table .calc-rule {
   color: var(--text-muted);
   font-size: 12px;
@@ -976,6 +1034,43 @@ h2 {
 
 .calc-callout-goal {
   font-size: 15px;
+}
+
+.calc-callout-ok {
+  background: #e3f1e6;
+}
+
+.calc-callout-ok .calc-callout-goal {
+  color: #3a7d44;
+}
+
+.calc-excluded {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.calc-excluded li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: #f6e7dc;
+  border: 1px solid #e6cdb8;
+}
+
+.calc-excluded-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.calc-excluded-reason {
+  font-size: 13px;
+  color: #8a5a2a;
 }
 
 .calc-vectors {

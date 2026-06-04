@@ -149,6 +149,15 @@ function RecommenderApp() {
           )}
 
           {hasSelection && (
+            <DebugPanel
+              result={result}
+              selectedMoodIds={selected}
+              longTermGoals={settings.longTermGoals}
+              historyCount={history.length}
+            />
+          )}
+
+          {hasSelection && (
             <FeedbackPanel
               primary={result.primary}
               selectedMoodIds={selected}
@@ -161,15 +170,6 @@ function RecommenderApp() {
           )}
 
           <ProfileSummary history={history} onReset={() => setHistory([])} />
-
-          {hasSelection && (
-            <DebugPanel
-              result={result}
-              selectedMoodIds={selected}
-              longTermGoals={settings.longTermGoals}
-              historyCount={history.length}
-            />
-          )}
         </div>
       </div>
     </>

@@ -80,13 +80,17 @@ export function CalculationWalkthrough({
     scoredExercises.find((s) => s.exercise.id === result.primary?.id) ??
     scoredExercises[0];
 
+  const excluded = result.excludedExercises;
+
   return (
-    <section className="calc">
-      <h2>Live-Berechnung — Schritt für Schritt</h2>
-      <p className="hint">
-        Diese Ansicht zeigt in Echtzeit, wie aus deiner Auswahl die Empfehlung
-        entsteht. Jede Zahl unten wird genau so im Algorithmus verwendet.
-      </p>
+    <details className="calc" open>
+      <summary className="calc-summary">
+        <h2>Live-Berechnung — Schritt für Schritt</h2>
+        <span className="calc-summary-hint">
+          Zeigt in Echtzeit, wie aus deiner Auswahl die Empfehlung entsteht.
+          (Klicken zum Ein-/Ausklappen)
+        </span>
+      </summary>
 
       {/* Step 1 — moods → profile */}
       <div className="calc-step">
@@ -101,7 +105,7 @@ export function CalculationWalkthrough({
           („worst-case“, damit ein belastender Zustand nicht verwässert wird).
         </p>
         <div className="table-scroll">
-          <table className="calc-table">
+          <table className="calc-table calc-table-centered">
             <thead>
               <tr>
                 <th>Dimension</th>
@@ -153,10 +157,40 @@ export function CalculationWalkthrough({
         </div>
       </div>
 
-      {/* Step 3 — desired change */}
+      {/* Step 3 — safety filter */}
       <div className="calc-step">
         <div className="calc-step-head">
           <span className="calc-step-num">3</span>
+          <h3>Sicherheitsfilter prüft jede Übung</h3>
+        </div>
+        <p className="calc-note">
+          Bevor bewertet wird, fliegen riskante oder unpassende Übungen raus –
+          unabhängig vom Zustandsziel. Was hier ausgeschlossen wird, kann gar
+          nicht erst empfohlen werden.
+        </p>
+        {excluded.length === 0 ? (
+          <div className="calc-callout calc-callout-ok">
+            <div className="calc-callout-goal">
+              ✓ Keine Übung ausgeschlossen – alle {scoredExercises.length}{' '}
+              Übungen sind für dieses Profil sicher.
+            </div>
+          </div>
+        ) : (
+          <ul className="calc-excluded">
+            {excluded.map((e) => (
+              <li key={e.exercise.id}>
+                <span className="calc-excluded-title">{e.exercise.title}</span>
+                <span className="calc-excluded-reason">{e.reason}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Step 4 — desired change */}
+      <div className="calc-step">
+        <div className="calc-step-head">
+          <span className="calc-step-num">4</span>
           <h3>Welche Veränderung wäre hilfreich?</h3>
         </div>
         <p className="calc-note">
@@ -185,11 +219,11 @@ export function CalculationWalkthrough({
         </div>
       </div>
 
-      {/* Step 4 — scoring the winner */}
+      {/* Step 5 — scoring the winner */}
       {primaryScored && (
         <div className="calc-step">
           <div className="calc-step-head">
-            <span className="calc-step-num">4</span>
+            <span className="calc-step-num">5</span>
             <h3>
               Bewertung der Empfehlung: {primaryScored.exercise.title}
             </h3>
@@ -253,10 +287,10 @@ export function CalculationWalkthrough({
         </div>
       )}
 
-      {/* Step 5 — ranking */}
+      {/* Step 6 — ranking */}
       <div className="calc-step">
         <div className="calc-step-head">
-          <span className="calc-step-num">5</span>
+          <span className="calc-step-num">6</span>
           <h3>Ranking entscheidet die Empfehlung</h3>
         </div>
         <p className="calc-note">
@@ -289,6 +323,6 @@ export function CalculationWalkthrough({
           </p>
         )}
       </div>
-    </section>
+    </details>
   );
 }
