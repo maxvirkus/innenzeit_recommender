@@ -1582,3 +1582,235 @@ h2 {
     display: none;
   }
 }
+
+/* ============================================================
+   Combinatorics explorer (3rd tab)
+   ============================================================ */
+.combo-explorer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.combo-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.control-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.reach-sub {
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.reach-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+
+.reach-badge {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.reach-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.reach-cell {
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  background: var(--surface);
+}
+
+.reach-cell-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.reach-cell-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.reach-badge-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.reach-cell-status {
+  margin: 6px 0 2px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.reach-cell-meta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Status colours */
+.reach-primary {
+  border-left-color: #3f9d6b;
+}
+.reach-primary.reach-badge {
+  background: #e6f4ec;
+  border-color: #b6e0c6;
+  color: #2c7a4f;
+}
+.reach-primary .reach-badge-dot {
+  background: #3f9d6b;
+}
+
+.reach-alt {
+  border-left-color: #c79a2e;
+}
+.reach-alt.reach-badge {
+  background: #fbf2da;
+  border-color: #ecd9a4;
+  color: #8a6a13;
+}
+.reach-alt .reach-badge-dot {
+  background: #c79a2e;
+}
+
+.reach-out {
+  border-left-color: #c2603a;
+}
+.reach-out.reach-badge {
+  background: #f8e6dd;
+  border-color: #ecc3b0;
+  color: #9a4523;
+}
+.reach-out .reach-badge-dot {
+  background: #c2603a;
+}
+
+.reach-excl {
+  border-left-color: #b23b3b;
+}
+.reach-excl.reach-badge {
+  background: #f7dede;
+  border-color: #e7b4b4;
+  color: #8f2b2b;
+}
+.reach-excl .reach-badge-dot {
+  background: #b23b3b;
+}
+
+.reach-note {
+  margin-top: 16px;
+}
+
+.reach-warn {
+  background: #f7dede;
+  border: 1px solid #e7b4b4;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  color: #8f2b2b;
+}
+
+/* Mapping table */
+.combo-table-scroll {
+  max-height: 520px;
+  overflow: auto;
+}
+
+.combo-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.combo-table th,
+.combo-table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.combo-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-weight: 500;
+  z-index: 1;
+}
+
+.combo-alts {
+  color: var(--text-muted);
+}
+
+.combo-num {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.combo-tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.combo-tag {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .reach-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Feedback field grouping (distinguish the two 1–5 ratings) */
+.fb-field {
+  margin-top: 14px;
+}
+
+.fb-eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-bottom: 6px;
+}

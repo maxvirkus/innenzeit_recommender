@@ -10,8 +10,20 @@ create table if not exists public.session_feedback (
   state_goal text,
   long_term_goals jsonb not null default '[]'::jsonb,
   rating int,
+  family text,
+  explanation_clarity int,
+  comment text,
+  better_fit text,
   client_timestamp timestamptz
 );
+
+-- Migration for existing installs: add the feedback columns introduced later.
+-- Safe to run repeatedly thanks to "if not exists".
+alter table public.session_feedback
+  add column if not exists family text,
+  add column if not exists explanation_clarity int,
+  add column if not exists comment text,
+  add column if not exists better_fit text;
 
 -- The app talks to this table only through the serverless functions using the
 -- service role key, so Row Level Security can stay enabled with no public

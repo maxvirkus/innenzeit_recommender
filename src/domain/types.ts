@@ -180,8 +180,6 @@ export interface SessionFeedback {
   stateGoal: StateGoal;
   longTermGoals: LongTermGoal[];
   rating: 1 | 2 | 3 | 4 | 5;
-  /** Did the recommendation feel fitting for the mood? (UX rating) */
-  fitFeeling?: 1 | 2 | 3 | 4 | 5;
   /** Was the explanation understandable? (UX rating) */
   explanationClarity?: 1 | 2 | 3 | 4 | 5;
   /** Did the user complete the practice? */

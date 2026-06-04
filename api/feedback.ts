@@ -37,6 +37,10 @@ export default async function handler(
       state_goal: b.stateGoal,
       long_term_goals: b.longTermGoals ?? [],
       rating: b.rating,
+      family: b.family ?? null,
+      explanation_clarity: b.explanationClarity ?? null,
+      comment: b.comment ?? null,
+      better_fit: b.betterFit ?? null,
       client_timestamp: b.timestamp ?? new Date().toISOString(),
     };
 
@@ -69,6 +73,10 @@ export default async function handler(
       stateGoal: r.state_goal,
       longTermGoals: r.long_term_goals,
       rating: r.rating,
+      family: r.family,
+      explanationClarity: r.explanation_clarity,
+      comment: r.comment,
+      betterFit: r.better_fit,
       timestamp: r.client_timestamp,
     }));
     res.status(200).json({ feedback });

@@ -313,11 +313,10 @@ export function BackgroundPage() {
       <section className="bg-section">
         <h2>Evidenz als mehrere Facetten</h2>
         <p className="intro">
-          Früher gab es eine einzelne „Wissenschafts“-Zahl. Jetzt hat jede Übung
-          ein <strong>Evidenz-Profil</strong> aus fünf Facetten (jeweils 0–3):
-          Studienlage, Plausibilität des Wirkmechanismus, Passung zur Zielgruppe,
-          App-Tauglichkeit und Sicherheits-Zuversicht. Daraus entsteht der
-          EvidenzFit — bewusst als Leitplanke, nicht als Beweis.
+          Jede Übung hat ein <strong>Evidenz-Profil</strong> aus fünf Facetten
+          (jeweils 0–3): Studienlage, Plausibilität des Wirkmechanismus, Passung
+          zur Zielgruppe, App-Tauglichkeit und Sicherheits-Zuversicht. Daraus
+          entsteht der EvidenzFit — bewusst als Leitplanke, nicht als Beweis.
         </p>
       </section>
 

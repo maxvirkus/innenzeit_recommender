@@ -4,6 +4,7 @@ import { TimeOfDaySelector } from './components/TimeOfDaySelector';
 import { RecommendationResult } from './components/RecommendationResult';
 import { CalculationWalkthrough } from './components/CalculationWalkthrough';
 import { BackgroundPage } from './components/BackgroundPage';
+import { CombinatoricsExplorer } from './components/CombinatoricsExplorer';
 import { SettingsPanel } from './components/SettingsPanel';
 import { FeedbackPanel } from './components/FeedbackPanel';
 import { ProfileSummary } from './components/ProfileSummary';
@@ -47,7 +48,7 @@ export default function App() {
   return <AuthedApp />;
 }
 
-type Tab = 'recommender' | 'background';
+type Tab = 'recommender' | 'combinatorics' | 'background';
 
 function AuthedApp() {
   const [tab, setTab] = useState<Tab>('recommender');
@@ -62,6 +63,12 @@ function AuthedApp() {
           Recommender-Test
         </button>
         <button
+          className={tab === 'combinatorics' ? 'active' : ''}
+          onClick={() => setTab('combinatorics')}
+        >
+          Kombinatorik
+        </button>
+        <button
           className={tab === 'background' ? 'active' : ''}
           onClick={() => setTab('background')}
         >
@@ -69,7 +76,9 @@ function AuthedApp() {
         </button>
       </nav>
 
-      {tab === 'recommender' ? <RecommenderApp /> : <BackgroundPage />}
+      {tab === 'recommender' && <RecommenderApp />}
+      {tab === 'combinatorics' && <CombinatoricsExplorer />}
+      {tab === 'background' && <BackgroundPage />}
     </div>
   );
 }

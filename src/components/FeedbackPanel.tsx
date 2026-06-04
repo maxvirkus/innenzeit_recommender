@@ -52,7 +52,6 @@ export function FeedbackPanel({
     stateGoal,
     longTermGoals,
     rating,
-    fitFeeling: rating,
     explanationClarity: clarity,
     comment: comment.trim() || undefined,
     betterFit: betterFit.trim() || undefined,
@@ -107,38 +106,47 @@ export function FeedbackPanel({
         entspricht. Die Übung selbst musst du dafür nicht durchführen.
       </p>
 
-      {/* Shared rating input */}
-      <label className="field-label" htmlFor="rating">
-        Wie gut passt die Empfehlung? (1 = gar nicht, 5 = sehr gut)
-      </label>
-      <select
-        id="rating"
-        className="rating-select"
-        value={rating}
-        onChange={(e) => setRating(Number(e.target.value) as Rating)}
-      >
-        {[1, 2, 3, 4, 5].map((n) => (
-          <option key={n} value={n}>
-            {n}
-          </option>
-        ))}
-      </select>
+      {/* Rating about the exercise itself */}
+      <div className="fb-field">
+        <span className="fb-eyebrow">Übung</span>
+        <label className="field-label" htmlFor="rating">
+          Wie gut passt die empfohlene Übung zu deinem Zustand? (1 = gar nicht,
+          5 = sehr gut)
+        </label>
+        <select
+          id="rating"
+          className="rating-select"
+          value={rating}
+          onChange={(e) => setRating(Number(e.target.value) as Rating)}
+        >
+          {[1, 2, 3, 4, 5].map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+        </select>
+      </div>
 
-      <label className="field-label" htmlFor="clarity">
-        War die Begründung verständlich? (1 = gar nicht, 5 = sehr klar)
-      </label>
-      <select
-        id="clarity"
-        className="rating-select"
-        value={clarity}
-        onChange={(e) => setClarity(Number(e.target.value) as Rating)}
-      >
-        {[1, 2, 3, 4, 5].map((n) => (
-          <option key={n} value={n}>
-            {n}
-          </option>
-        ))}
-      </select>
+      {/* Rating about the explanation, not the exercise */}
+      <div className="fb-field">
+        <span className="fb-eyebrow">Erklärung</span>
+        <label className="field-label" htmlFor="clarity">
+          Wie verständlich war die <em>Begründung</em> der Empfehlung? (1 = gar
+          nicht, 5 = sehr klar)
+        </label>
+        <select
+          id="clarity"
+          className="rating-select"
+          value={clarity}
+          onChange={(e) => setClarity(Number(e.target.value) as Rating)}
+        >
+          {[1, 2, 3, 4, 5].map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <label className="field-label" htmlFor="betterFit">
         Hätte eine andere Übung besser gepasst? (optional)
