@@ -36,8 +36,6 @@ const baseFeedback = (
   stateGoal: 'stress_reduction',
   longTermGoals: [],
   rating: 4,
-  completed: true,
-  stoppedEarly: false,
   timestamp: new Date().toISOString(),
   ...over,
 });
@@ -152,15 +150,13 @@ describe('scoring helpers', () => {
     expect(calculatePersonalEvidenceScore(ex, 'stress_reduction', history)).toBe(0);
   });
 
-  it('feltWorse drives personal evidence strongly negative', () => {
+  it('low ratings drive personal evidence negative', () => {
     const ex = EXERCISES_BY_ID['physiological_sigh'];
     const history = Array.from({ length: 3 }, () =>
       baseFeedback({
         practiceId: 'physiological_sigh',
         stateGoal: 'stress_reduction',
-        rating: 3,
-        feltWorse: true,
-        completed: false,
+        rating: 1,
       }),
     );
     expect(
@@ -170,16 +166,6 @@ describe('scoring helpers', () => {
 });
 
 describe('safety – new hard filters', () => {
-  it('excludes a practice marked feltWorse multiple times', () => {
-    const history = [
-      baseFeedback({ practiceId: 'physiological_sigh', feltWorse: true }),
-      baseFeedback({ practiceId: 'physiological_sigh', feltWorse: true }),
-    ];
-    const r = run(['stressed'], 'midday', { history });
-    const excludedIds = r.excludedExercises.map((e) => e.exercise.id);
-    expect(excludedIds).toContain('physiological_sigh');
-  });
-
   it('excludes rapid breathing for breathwork beginners', () => {
     const r = run(['tired'], 'midday', {
       userSettings: {

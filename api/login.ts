@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { buildSessionCookie } from './_auth';
+import { buildSessionCookie } from './_auth.js';
 
 /** POST /api/login — checks the shared password and sets a session cookie. */
 export default function handler(req: VercelRequest, res: VercelResponse) {

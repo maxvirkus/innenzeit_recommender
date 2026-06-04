@@ -48,9 +48,6 @@ export function FeedbackPanel({
     stateGoal,
     longTermGoals,
     rating,
-    completed: true,
-    stoppedEarly: false,
-    feltWorse: false,
     timestamp: new Date().toISOString(),
   });
 

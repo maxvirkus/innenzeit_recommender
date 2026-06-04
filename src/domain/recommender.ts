@@ -100,7 +100,6 @@ export function recommendExercises(
       timeOfDay,
       userSettings,
       userIntent,
-      history,
     });
     if (!decision.allowed) {
       excluded.push({ exercise, reason: decision.reason ?? 'ausgeschlossen' });

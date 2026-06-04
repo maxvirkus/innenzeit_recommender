@@ -121,9 +121,6 @@ export interface SessionFeedback {
   stateGoal: StateGoal;
   longTermGoals: LongTermGoal[];
   rating: 1 | 2 | 3 | 4 | 5;
-  completed: boolean;
-  stoppedEarly: boolean;
-  feltWorse?: boolean;
   timestamp: string;
 }
 

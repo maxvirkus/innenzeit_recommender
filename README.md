@@ -19,7 +19,7 @@ npm run build    # Production-Build (dist/)
 - `src/domain/` – reine Algorithmus-Logik (ohne React, separat testbar)
   - `deriveStateGoal.ts` – kurzfristiges Zustandsziel
   - `scoring.ts` – StateFit, LongTermGoalFit, PersonalEvidence, FinalScore
-  - `safetyRules.ts` – harte Filter (Rapid Breathing, Breathhold, L3-Gating, feltWorse)
+  - `safetyRules.ts` – harte Filter (Rapid Breathing, Breathhold, L3-Gating)
   - `recommender.ts` – Pipeline inkl. Coherent-Breathing-Sonderregeln
 - `src/components/` – UI-Bausteine (inkl. Onboarding/Settings, Feedback, Debug)
 - `api/` – Vercel Serverless Functions (Login, Session, Feedback)
@@ -30,7 +30,7 @@ npm run build    # Production-Build (dist/)
 - **LongTermGoals** (Onboarding/Settings): fließen über `calculateLongTermGoalFit` ein.
 - **StateGoal** (pro Session aus dem Profil abgeleitet): treibt `calculateStateFit`.
 - **PersonalEvidence**: aus lokaler History (localStorage), ab 3 relevanten Einträgen
-  wirksam; `feltWorse` wird stark negativ gewichtet.
+  wirksam; basiert auf der durchschnittlichen Bewertung (Rating) der Empfehlung.
 - Gewichtung verschiebt sich bei hohem Stress / niedriger Stabilität stärker auf den State-Fit.
 
 ## History-Simulation

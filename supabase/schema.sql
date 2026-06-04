@@ -10,9 +10,6 @@ create table if not exists public.session_feedback (
   state_goal text,
   long_term_goals jsonb not null default '[]'::jsonb,
   rating int,
-  completed boolean not null default false,
-  stopped_early boolean not null default false,
-  felt_worse boolean not null default false,
   client_timestamp timestamptz
 );
 

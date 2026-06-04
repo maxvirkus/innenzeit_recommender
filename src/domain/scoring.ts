@@ -45,9 +45,8 @@ function relevantHistory(
 }
 
 /**
- * Personal evidence: how this user reacted to the practice in comparable
+ * Personal evidence: how this user rated the practice in comparable
  * situations. Needs at least 3 relevant entries, otherwise neutral (0).
- * `feltWorse` is weighted strongly negative.
  */
 export function calculatePersonalEvidenceScore(
   practice: Exercise,
@@ -59,17 +58,9 @@ export function calculatePersonalEvidenceScore(
 
   const n = relevant.length;
   const avgRating = relevant.reduce((s, h) => s + h.rating, 0) / n;
-  const completionRate = relevant.filter((h) => h.completed).length / n;
-  const feltWorseRate = relevant.filter((h) => h.feltWorse).length / n;
 
   // Center rating around 3 (neutral) → roughly -2..+2.
-  const ratingPart = avgRating - 3;
-  // Completion around 0.5 baseline → roughly -1..+1.
-  const completionPart = (completionRate - 0.5) * 2;
-  // feltWorse weighs heavily negative → 0..-5.
-  const feltWorsePart = feltWorseRate * 5;
-
-  return ratingPart + completionPart - feltWorsePart;
+  return avgRating - 3;
 }
 
 export interface FinalScoreInput {

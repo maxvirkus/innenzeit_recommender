@@ -371,6 +371,12 @@ h2 {
   filter: brightness(1.05);
 }
 
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: none;
+}
+
 .empty {
   color: var(--text-muted);
   padding: 24px;
@@ -502,28 +508,56 @@ h2 {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  color: var(--text-muted);
+  color: var(--text);
 }
 
 .gate-card {
   width: 100%;
   max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   text-align: center;
+}
+
+.gate-card h1 {
+  margin: 0;
+}
+
+.gate-card .intro {
+  margin: 0;
+  color: var(--text-muted);
 }
 
 .gate-card input {
   width: 100%;
   font: inherit;
   padding: 10px 12px;
+  min-height: 42px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  margin-top: 12px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.gate-card input::placeholder {
+  color: var(--text-muted);
+}
+
+.gate-card input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.gate-card .btn {
+  width: 100%;
 }
 
 .gate-error {
   color: #b3261e;
   font-size: 14px;
-  margin: 8px 0 0;
+  margin: 0;
 }
 
 /* Goal banner */

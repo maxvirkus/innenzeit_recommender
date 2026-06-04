@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import { requireAuth } from './_auth';
+import { requireAuth } from './_auth.js';
 
 const TABLE = 'session_feedback';
 
@@ -37,9 +37,6 @@ export default async function handler(
       state_goal: b.stateGoal,
       long_term_goals: b.longTermGoals ?? [],
       rating: b.rating,
-      completed: b.completed ?? false,
-      stopped_early: b.stoppedEarly ?? false,
-      felt_worse: b.feltWorse ?? false,
       client_timestamp: b.timestamp ?? new Date().toISOString(),
     };
 
@@ -72,9 +69,6 @@ export default async function handler(
       stateGoal: r.state_goal,
       longTermGoals: r.long_term_goals,
       rating: r.rating,
-      completed: r.completed,
-      stoppedEarly: r.stopped_early,
-      feltWorse: r.felt_worse,
       timestamp: r.client_timestamp,
     }));
     res.status(200).json({ feedback });

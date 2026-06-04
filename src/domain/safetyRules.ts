@@ -3,7 +3,6 @@ import type {
   Exercise,
   MoodId,
   MoodProfile,
-  SessionFeedback,
   TimeOfDay,
   UserIntent,
   UserSettings,
@@ -21,10 +20,7 @@ export interface SafetyContext {
   timeOfDay: TimeOfDay;
   userSettings: UserSettings;
   userIntent: UserIntent;
-  history: SessionFeedback[];
 }
-
-const FELT_WORSE_LIMIT = 2;
 
 /**
  * Hard safety filter. Returns whether a practice may be recommended at all.
@@ -34,8 +30,7 @@ export function isAllowedBySafetyRules(
   exercise: Exercise,
   ctx: SafetyContext,
 ): SafetyDecision {
-  const { profile, selectedMoodIds, timeOfDay, userSettings, userIntent, history } =
-    ctx;
+  const { profile, selectedMoodIds, timeOfDay, userSettings, userIntent } = ctx;
 
   const highStress = profile.stress >= 1.2 || selectedMoodIds.includes('stressed');
   const lowStability = profile.stability <= -1.5;
@@ -156,16 +151,6 @@ export function isAllowedBySafetyRules(
         reason: 'L3-Praxis ohne Freigabe / stabiles Profil ausgeschlossen',
       };
   }
-
-  // --- feltWorse history ---
-  const feltWorseCount = history.filter(
-    (h) => h.practiceId === exercise.id && h.feltWorse,
-  ).length;
-  if (feltWorseCount >= FELT_WORSE_LIMIT)
-    return {
-      allowed: false,
-      reason: `Mehrfach als belastend markiert (${feltWorseCount}×) ausgeschlossen`,
-    };
 
   return { allowed: true };
 }

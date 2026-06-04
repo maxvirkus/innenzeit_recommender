@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { isAuthenticated } from './_auth';
+import { isAuthenticated } from './_auth.js';
 
 /** GET /api/session — reports whether the caller has a valid session. */
 export default function handler(req: VercelRequest, res: VercelResponse) {
