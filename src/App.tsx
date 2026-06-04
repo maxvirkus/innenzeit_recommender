@@ -60,7 +60,7 @@ function AuthedApp() {
           className={tab === 'recommender' ? 'active' : ''}
           onClick={() => setTab('recommender')}
         >
-          Recommender-Test
+          Recommender
         </button>
         <button
           className={tab === 'combinatorics' ? 'active' : ''}

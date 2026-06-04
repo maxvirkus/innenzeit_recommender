@@ -841,13 +841,24 @@ h2 {
   /* Tab bar: full width, evenly split, no overflow on phones */
   .tab-bar {
     width: 100%;
+    margin-left: auto;
+    margin-right: auto;
   }
   .tab-bar button {
     flex: 1 1 0;
-    padding: 8px 6px;
+    padding: 9px 6px;
     text-align: center;
-    font-size: 13px;
-    line-height: 1.25;
+    font-size: 14px;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  /* Center the page header and section headings on phones */
+  .app-header {
+    text-align: center;
+  }
+  .input-column > h2,
+  .result-column > h2 {
+    text-align: center;
   }
   /* Trim card padding so content keeps more usable width */
   .card {
