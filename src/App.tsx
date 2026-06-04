@@ -3,6 +3,8 @@ import { MoodSelector } from './components/MoodSelector';
 import { TimeOfDaySelector } from './components/TimeOfDaySelector';
 import { RecommendationResult } from './components/RecommendationResult';
 import { DebugPanel } from './components/DebugPanel';
+import { CalculationWalkthrough } from './components/CalculationWalkthrough';
+import { BackgroundPage } from './components/BackgroundPage';
 import { SettingsPanel } from './components/SettingsPanel';
 import { FeedbackPanel } from './components/FeedbackPanel';
 import { ProfileSummary } from './components/ProfileSummary';
@@ -43,7 +45,34 @@ export default function App() {
   if (authState === 'out') {
     return <PasswordGate onAuthenticated={() => setAuthState('in')} />;
   }
-  return <RecommenderApp />;
+  return <AuthedApp />;
+}
+
+type Tab = 'recommender' | 'background';
+
+function AuthedApp() {
+  const [tab, setTab] = useState<Tab>('recommender');
+
+  return (
+    <div className="app">
+      <nav className="tab-bar" aria-label="Bereiche">
+        <button
+          className={tab === 'recommender' ? 'active' : ''}
+          onClick={() => setTab('recommender')}
+        >
+          Recommender-Test
+        </button>
+        <button
+          className={tab === 'background' ? 'active' : ''}
+          onClick={() => setTab('background')}
+        >
+          Hintergrund
+        </button>
+      </nav>
+
+      {tab === 'recommender' ? <RecommenderApp /> : <BackgroundPage />}
+    </div>
+  );
 }
 
 function RecommenderApp() {
@@ -76,7 +105,7 @@ function RecommenderApp() {
   const hasSelection = selected.length > 0;
 
   return (
-    <div className="app">
+    <>
       <header className="app-header">
         <h1>Innenzeit Recommender Test</h1>
         <p className="intro">
@@ -110,6 +139,16 @@ function RecommenderApp() {
           )}
 
           {hasSelection && (
+            <CalculationWalkthrough
+              result={result}
+              selectedMoodIds={selected}
+              timeOfDay={timeOfDay}
+              settings={settings}
+              userIntent={userIntent}
+            />
+          )}
+
+          {hasSelection && (
             <FeedbackPanel
               primary={result.primary}
               selectedMoodIds={selected}
@@ -133,6 +172,6 @@ function RecommenderApp() {
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -11,18 +11,6 @@ export type MoodId =
 
 export type TimeOfDay = 'morning' | 'midday' | 'evening';
 
-/**
- * Legacy mood-category, used by the original classifier. Still surfaced for
- * backwards compatibility and the debug view. The recommendation pipeline now
- * primarily works with {@link StateGoal}.
- */
-export type Category =
-  | 'acute_regulation'
-  | 'heaviness_sadness'
-  | 'gentle_activation'
-  | 'positive_integration'
-  | 'neutral';
-
 /** Long-term onboarding goals, set once per user in the settings panel. */
 export type LongTermGoal =
   | 'calm'
@@ -44,7 +32,13 @@ export type StateGoal =
   | 'positive_integration'
   | 'evening_regulation';
 
-export type PracticeLevel = 'L1' | 'L2' | 'L3';
+/**
+ * How much psychological depth / readiness a practice asks for. This is a
+ * property of the *practice itself* and is unrelated to the later per-exercise
+ * experience tiers (the future "3 levels of one exercise"). Kept deliberately
+ * free of "L1/L2/L3" naming to avoid that clash.
+ */
+export type DepthCategory = 'basic' | 'moderate' | 'deep';
 export type Experience = 'none' | 'some' | 'regular';
 
 /** Explicit intent for the current session (drives deep-practice gating). */
@@ -85,19 +79,15 @@ export type ExerciseId =
   | 'power_breath'
   | 'body_scan'
   | 'self_compassion'
-  | 'goal_visualization';
+  | 'goal_visualization'
+  | 'activating_breath'
+  | 'energy_meditation'
+  | 'gratitude_reflection';
 
 export interface Exercise {
   id: ExerciseId;
   title: string;
   description: string;
-  energyEffect: number;
-  stressReduction: number;
-  depth: number;
-  risk: number;
-  /** Legacy free-text tags, still used by the original scoring helpers. */
-  suitableFor: string[];
-  avoidWhen: string[];
   durationMinutes: number;
   /** Short-term goals this practice serves. */
   stateGoals: StateGoal[];
@@ -107,8 +97,15 @@ export interface Exercise {
   sciencePrior: number;
   /** Rough contraindication risk, 0–3 (drives the risk penalty). */
   contraindicationRisk: number;
-  /** Required practice depth level. */
-  level: PracticeLevel;
+  /** How much depth / readiness the practice asks for. */
+  depthCategory: DepthCategory;
+  /**
+   * Intended physiological/affective nudge of the practice on each mood
+   * dimension (roughly -3..+3). Positive raises the dimension, negative lowers
+   * it. Used by the profile-fit score to reward practices that actually
+   * counteract the user's current state.
+   */
+  targets: MoodProfile;
   /** Breath technique, used by the hard safety filters. */
   breathTechnique: BreathTechnique;
 }
@@ -126,6 +123,7 @@ export interface SessionFeedback {
 
 export interface ScoreBreakdown {
   stateFit: number;
+  profileFit: number;
   longTermGoalFit: number;
   personalEvidence: number;
   sciencePrior: number;
@@ -146,7 +144,6 @@ export interface ExcludedExercise {
 
 export interface RecommendationResult {
   profile: MoodProfile;
-  category: Category;
   stateGoal: StateGoal;
   primary: Exercise | null;
   alternatives: Exercise[];

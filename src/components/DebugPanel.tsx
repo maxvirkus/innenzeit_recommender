@@ -107,6 +107,7 @@ export function DebugPanel({
               <tr>
                 <th>Übung</th>
                 <th>StateFit</th>
+                <th>ProfilFit</th>
                 <th>LongTermFit</th>
                 <th>PersonalEv.</th>
                 <th>Science</th>
@@ -119,6 +120,7 @@ export function DebugPanel({
                 <tr key={s.exercise.id}>
                   <td>{s.exercise.title}</td>
                   <td>{fmt(s.breakdown.stateFit)}</td>
+                  <td>{fmt(s.breakdown.profileFit)}</td>
                   <td>{fmt(s.breakdown.longTermGoalFit)}</td>
                   <td
                     className={

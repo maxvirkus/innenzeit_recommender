@@ -1,6 +1,5 @@
 import { EXERCISES } from '../data/exercises';
 import { calculateMoodProfile } from './calculateMoodProfile';
-import { classifyMoodProfile } from './classifyMoodProfile';
 import { deriveStateGoal } from './deriveStateGoal';
 import { isAllowedBySafetyRules } from './safetyRules';
 import { calculateFinalScore } from './scoring';
@@ -28,17 +27,11 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
 };
 
 /**
- * Fallback used when no settings are passed (e.g. in unit tests). Slightly
- * more permissive than the UI default so the scoring engine can be exercised
- * without first configuring experience levels.
+ * Fallback used when no settings are passed (e.g. in unit tests). Intentionally
+ * identical to {@link DEFAULT_USER_SETTINGS} so tests exercise the same
+ * conservative safety posture a first-time user actually gets.
  */
-const FALLBACK_SETTINGS: UserSettings = {
-  longTermGoals: [],
-  breathworkExperience: 'some',
-  meditationExperience: 'some',
-  allowDeepPractice: false,
-  allowCombinedSessions: false,
-};
+const FALLBACK_SETTINGS: UserSettings = DEFAULT_USER_SETTINGS;
 
 export interface RecommenderInput {
   selectedMoodIds: MoodId[];
@@ -81,7 +74,6 @@ export function recommendExercises(
   } = input;
 
   const profile = calculateMoodProfile(selectedMoodIds);
-  const category = classifyMoodProfile(profile, selectedMoodIds);
   const stateGoal = deriveStateGoal(
     profile,
     selectedMoodIds,
@@ -96,7 +88,6 @@ export function recommendExercises(
     const decision = isAllowedBySafetyRules(exercise, {
       profile,
       selectedMoodIds,
-      category,
       timeOfDay,
       userSettings,
       userIntent,
@@ -115,7 +106,16 @@ export function recommendExercises(
     allowed.push({ exercise, score: breakdown.finalScore, breakdown });
   }
 
-  allowed.sort((a, b) => b.score - a.score);
+  // Rank by score, then break ties deterministically: stronger evidence first,
+  // then shorter (lower commitment), then stable id order.
+  allowed.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (b.exercise.sciencePrior !== a.exercise.sciencePrior)
+      return b.exercise.sciencePrior - a.exercise.sciencePrior;
+    if (a.exercise.durationMinutes !== b.exercise.durationMinutes)
+      return a.exercise.durationMinutes - b.exercise.durationMinutes;
+    return a.exercise.id.localeCompare(b.exercise.id);
+  });
 
   // Pick the highest-scoring practice that is allowed to be primary.
   const primaryIndex = allowed.findIndex((s) =>
@@ -123,14 +123,16 @@ export function recommendExercises(
   );
   const primary = primaryIndex >= 0 ? allowed[primaryIndex].exercise : null;
 
+  // Alternatives must clear a minimum quality bar, so a clearly unfitting
+  // practice (negative score) is never surfaced as a "good alternative".
   const alternatives = allowed
     .filter((_, i) => i !== primaryIndex)
+    .filter((s) => s.score > 0)
     .slice(0, 2)
     .map((s) => s.exercise);
 
   return {
     profile,
-    category,
     stateGoal,
     primary,
     alternatives,

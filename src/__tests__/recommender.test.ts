@@ -5,9 +5,11 @@ import { calculateMoodProfile } from '../domain/calculateMoodProfile';
 import {
   calculateLongTermGoalFit,
   calculatePersonalEvidenceScore,
+  calculateProfileFit,
   calculateStateFit,
 } from '../domain/scoring';
 import { EXERCISES_BY_ID } from '../data/exercises';
+import { MOODS } from '../data/moods';
 import type {
   MoodId,
   SessionFeedback,
@@ -41,11 +43,9 @@ const baseFeedback = (
 });
 
 describe('recommender – core scenarios', () => {
-  it('stressed -> acute_regulation, no power_breath / goal_visualization', () => {
+  it('stressed -> stress_reduction, no power_breath / goal_visualization', () => {
     const r = run(['stressed']);
-    expect(r.category).toBe('acute_regulation');
-    // stability -2 makes grounding take precedence over stress_reduction.
-    expect(r.stateGoal).toBe('grounding');
+    expect(r.stateGoal).toBe('stress_reduction');
     expect(r.primary?.id).not.toBe('power_breath');
     expect(r.primary?.id).not.toBe('goal_visualization');
     const ids = r.scoredExercises.map((s) => s.exercise.id);
@@ -53,46 +53,53 @@ describe('recommender – core scenarios', () => {
     expect(ids).not.toContain('goal_visualization');
   });
 
-  it('tired -> gentle_activation state goal, activation practice ranks well', () => {
+  it('tired -> gentle_activation, a gentle low-risk practice is primary', () => {
     const r = run(['tired']);
-    expect(r.category).toBe('gentle_activation');
     expect(r.stateGoal).toBe('gentle_activation');
-    const top3 = r.scoredExercises.slice(0, 3).map((s) => s.exercise.id);
-    expect(top3).toContain('power_breath');
+    // Power Breath must not be the answer for an exhausted beginner.
+    expect(['activating_breath', 'energy_meditation']).toContain(r.primary?.id);
+    const excludedIds = r.excludedExercises.map((e) => e.exercise.id);
+    expect(excludedIds).toContain('power_breath');
   });
 
-  it('tired + stressed -> acute_regulation, exclusions apply', () => {
+  it('tired + stressed -> stress_reduction, exclusions apply', () => {
     const r = run(['tired', 'stressed']);
-    expect(r.category).toBe('acute_regulation');
+    expect(r.stateGoal).toBe('stress_reduction');
     const excludedIds = r.excludedExercises.map((e) => e.exercise.id);
     expect(excludedIds).toContain('power_breath');
     expect(excludedIds).toContain('goal_visualization');
   });
 
-  it('sad + heavy -> heaviness_sadness category, grounding goal, power_breath excluded', () => {
+  it('sad + heavy -> emotional_support, power_breath excluded, self_compassion kept', () => {
     const r = run(['sad', 'heavy']);
-    expect(r.category).toBe('heaviness_sadness');
-    expect(r.stateGoal).toBe('grounding');
+    expect(r.stateGoal).toBe('emotional_support');
     const excludedIds = r.excludedExercises.map((e) => e.exercise.id);
     expect(excludedIds).toContain('power_breath');
-    // self_compassion stays available for emotional processing.
-    expect(excludedIds).not.toContain('self_compassion');
+    // self_compassion is gated by L3 (not by the heaviness rule); it is excluded
+    // here only because deep practice is not enabled, not for safety reasons.
+    expect(excludedIds).not.toContain('gratitude_reflection');
   });
 
-  it('happy + content -> positive_integration, coherent breathing ranks high', () => {
+  it('worst-case pooling: heavy + happy still excludes power_breath', () => {
+    // Averaging would dilute heaviness/instability and wrongly allow Power Breath.
+    const r = run(['heavy', 'happy']);
+    const excludedIds = r.excludedExercises.map((e) => e.exercise.id);
+    expect(excludedIds).toContain('power_breath');
+  });
+
+  it('happy + content -> positive_integration, a positive practice is primary', () => {
     const r = run(['happy', 'content']);
-    expect(r.category).toBe('positive_integration');
     expect(r.stateGoal).toBe('positive_integration');
-    const top2 = r.scoredExercises.slice(0, 2).map((s) => s.exercise.id);
-    const hasPositive =
-      top2.includes('coherent_breathing') ||
-      top2.includes('goal_visualization');
-    expect(hasPositive).toBe(true);
+    expect([
+      'coherent_breathing',
+      'goal_visualization',
+      'gratitude_reflection',
+    ]).toContain(r.primary?.id);
   });
 
-  it('energized + stressed -> acute_regulation, no power_breath', () => {
+  it('energized + stressed -> stress_reduction, no power_breath', () => {
     const r = run(['energized', 'stressed']);
-    expect(r.category).toBe('acute_regulation');
+    expect(r.stateGoal).toBe('stress_reduction');
     const excludedIds = r.excludedExercises.map((e) => e.exercise.id);
     expect(excludedIds).toContain('power_breath');
   });
@@ -102,17 +109,33 @@ describe('recommender – core scenarios', () => {
     const excludedIds = r.excludedExercises.map((e) => e.exercise.id);
     expect(excludedIds).toContain('power_breath');
   });
+
+  it('alternatives never include a clearly unfitting practice (negative score)', () => {
+    const r = run(['stressed']);
+    const altScores = r.alternatives.map(
+      (alt) => r.scoredExercises.find((s) => s.exercise.id === alt.id)?.score ?? 0,
+    );
+    for (const score of altScores) expect(score).toBeGreaterThan(0);
+  });
 });
 
 describe('deriveStateGoal', () => {
   const intent: UserIntent = 'auto';
-  it('low stability -> grounding', () => {
-    const p = calculateMoodProfile(['stressed']); // stability -2
-    expect(deriveStateGoal(p, ['stressed'], 'midday', intent)).toBe('grounding');
+  it('stressed -> stress_reduction', () => {
+    const p = calculateMoodProfile(['stressed']);
+    expect(deriveStateGoal(p, ['stressed'], 'midday', intent)).toBe(
+      'stress_reduction',
+    );
   });
   it('energized -> focus', () => {
     const p = calculateMoodProfile(['energized']);
     expect(deriveStateGoal(p, ['energized'], 'midday', intent)).toBe('focus');
+  });
+  it('heavy + sad -> emotional_support', () => {
+    const p = calculateMoodProfile(['heavy', 'sad']);
+    expect(deriveStateGoal(p, ['heavy', 'sad'], 'midday', intent)).toBe(
+      'emotional_support',
+    );
   });
   it('evening fallback -> evening_regulation', () => {
     const p = calculateMoodProfile(['neutral']);
@@ -123,10 +146,11 @@ describe('deriveStateGoal', () => {
 });
 
 describe('scoring helpers', () => {
-  it('calculateStateFit rewards matching state goal', () => {
-    const ex = EXERCISES_BY_ID['five_four_three_two_one'];
-    expect(calculateStateFit(ex, 'grounding')).toBe(5);
-    expect(calculateStateFit(ex, 'focus')).toBe(-2);
+  it('calculateStateFit rewards matching, partial and unrelated goals', () => {
+    const ex = EXERCISES_BY_ID['five_four_three_two_one']; // grounding, stress_reduction
+    expect(calculateStateFit(ex, 'grounding')).toBe(5); // direct
+    expect(calculateStateFit(ex, 'evening_regulation')).toBe(1); // adjacent
+    expect(calculateStateFit(ex, 'focus')).toBe(-2); // unrelated
   });
 
   it('calculateLongTermGoalFit caps at +4', () => {
@@ -182,15 +206,44 @@ describe('safety – new hard filters', () => {
 });
 
 describe('coherent breathing placement', () => {
-  it('is not primary for emotional_support', () => {
-    // sad+heavy yields grounding; craft emotional_support directly via profile
-    // by using a heavy-only style selection. heavy alone: heaviness 2, valence -2,
-    // stability -2 -> grounding. Use a tweaked check via deriveStateGoal instead.
+  it('positive_integration allows a positive practice as primary', () => {
     const r = run(['happy', 'content']);
-    // positive_integration allows coherent as primary
     expect(r.stateGoal).toBe('positive_integration');
-    expect(['coherent_breathing', 'goal_visualization']).toContain(
-      r.primary?.id,
-    );
+    expect([
+      'coherent_breathing',
+      'goal_visualization',
+      'gratitude_reflection',
+    ]).toContain(r.primary?.id);
+  });
+});
+
+describe('profile fit – differentiation within a goal', () => {
+  it('rewards a stress reducer for a stressed profile, not for a calm one', () => {
+    const sigh = EXERCISES_BY_ID['physiological_sigh']; // strong stress down
+    const stressed = calculateMoodProfile(['stressed']);
+    const calm = calculateMoodProfile(['peaceful']);
+    expect(calculateProfileFit(sigh, stressed)).toBeGreaterThan(0);
+    expect(calculateProfileFit(sigh, calm)).toBeLessThanOrEqual(0);
+  });
+
+  it('rewards a gentle activator for a flat, low-energy profile', () => {
+    const act = EXERCISES_BY_ID['activating_breath']; // raises energy
+    const tired = calculateMoodProfile(['tired']);
+    expect(calculateProfileFit(act, tired)).toBeGreaterThan(0);
+  });
+});
+
+describe('variety – the profile actually changes the winner', () => {
+  it('mood pairs map to more than three distinct primary practices', () => {
+    const ids = MOODS.map((m) => m.id);
+    const primaries = new Set<string>();
+    for (let i = 0; i < ids.length; i++) {
+      for (let j = i + 1; j < ids.length; j++) {
+        const r = run([ids[i], ids[j]]);
+        if (r.primary) primaries.add(r.primary.id);
+      }
+    }
+    // The old goal-only model collapsed every pair onto 3 practices.
+    expect(primaries.size).toBeGreaterThan(3);
   });
 });

@@ -17,3 +17,8 @@ create table if not exists public.session_feedback (
 -- service role key, so Row Level Security can stay enabled with no public
 -- policies (service role bypasses RLS).
 alter table public.session_feedback enable row level security;
+
+-- Grant full access to service_role so the serverless functions can read/write.
+grant all on public.session_feedback to service_role;
+-- Allow the sequence (for id generation) to be used by service_role.
+grant usage, select on all sequences in schema public to service_role;
