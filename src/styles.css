@@ -838,6 +838,48 @@ h2 {
   h1 {
     font-size: 24px;
   }
+  /* Tab bar: full width, evenly split, no overflow on phones */
+  .tab-bar {
+    width: 100%;
+  }
+  .tab-bar button {
+    flex: 1 1 0;
+    padding: 8px 6px;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.25;
+  }
+  /* Trim card padding so content keeps more usable width */
+  .card {
+    padding: 16px;
+  }
+  .primary-card {
+    padding: 20px;
+  }
+  .primary-card .title {
+    font-size: 20px;
+  }
+  /* Tighter vertical rhythm on small screens */
+  h2 {
+    margin: 24px 0 10px;
+  }
+}
+
+@media (max-width: 380px) {
+  .app {
+    padding: 20px 12px 56px;
+  }
+  /* Mood cards: keep three across but tighten so labels don't clip */
+  .mood-grid {
+    gap: 8px;
+    padding: 12px;
+  }
+  .mood-card {
+    padding: 14px 4px;
+  }
+  .mood-card .label {
+    font-size: 13px;
+  }
 }
 
 /* ============================================================
