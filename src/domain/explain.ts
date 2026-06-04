@@ -1,4 +1,5 @@
 import type {
+  Mechanism,
   MoodProfile,
   ScoreBreakdown,
   ScoredExercise,
@@ -7,13 +8,25 @@ import type {
 
 /** Human-readable German labels for the short-term state goal. */
 export const STATE_GOAL_LABELS: Record<StateGoal, string> = {
-  grounding: 'Erdung & Stabilisierung',
+  grounding: 'Erden und Stabilisieren',
   stress_reduction: 'Stress reduzieren',
-  gentle_activation: 'Sanfte Aktivierung',
-  focus: 'Fokus & Klarheit',
-  emotional_support: 'Emotionale Unterstützung',
+  gentle_activation: 'Sanft aktivieren',
+  focus: 'Fokus bündeln',
+  emotional_support: 'Emotionalen Halt geben',
   positive_integration: 'Positives vertiefen',
-  evening_regulation: 'Zur Ruhe kommen (Abend)',
+  evening_regulation: 'Zur Ruhe kommen',
+};
+
+/** Plain-language German labels for the assumed working mechanisms. */
+export const MECHANISM_LABELS: Record<Mechanism, string> = {
+  parasympathetic_activation: 'beruhigender Atemrhythmus',
+  attentional_anchoring: 'Aufmerksamkeit verankern',
+  sensory_grounding: 'über Sinne und Körper stabilisieren',
+  cognitive_reappraisal: 'die Perspektive sanft verändern',
+  self_compassion: 'freundlicher Umgang mit dir selbst',
+  positive_affect_broadening: 'positive Wahrnehmung vertiefen',
+  behavioral_activation: 'sanft in Aktivität kommen',
+  interoceptive_awareness: 'Körperempfindungen wahrnehmen',
 };
 
 /** Human-readable German labels for the five mood dimensions. */
@@ -64,6 +77,28 @@ export function explainScore(
     });
   }
 
+  const mechanismLabels = scored.exercise.mechanisms.map(
+    (m) => MECHANISM_LABELS[m],
+  );
+  if (b.mechanismFit >= 2 && mechanismLabels.length > 0) {
+    factors.push({
+      label: `Wirkprinzip passt zum Ziel: ${mechanismLabels.join(', ')}`,
+      positive: true,
+    });
+  }
+
+  if (b.profileFit > 0.5) {
+    factors.push({
+      label: 'Dürfte deinen aktuellen Zustand spürbar ausgleichen',
+      positive: true,
+    });
+  } else if (b.profileFit < -0.5) {
+    factors.push({
+      label: 'Würde deinen aktuellen Zustand eher verstärken',
+      positive: false,
+    });
+  }
+
   if (b.longTermGoalFit > 0) {
     factors.push({
       label: 'Unterstützt deine Onboarding-Ziele',
@@ -83,8 +118,18 @@ export function explainScore(
     });
   }
 
-  if (b.sciencePrior >= 2) {
-    factors.push({ label: 'Gut durch Studien gestützt', positive: true });
+  if (b.evidenceFit >= 2) {
+    factors.push({
+      label: 'Durch Forschung gut plausibel gemacht',
+      positive: true,
+    });
+  }
+
+  if (b.safetyMultiplier < 1) {
+    factors.push({
+      label: 'Für deinen aktuellen Zustand etwas behutsamer dosiert',
+      positive: false,
+    });
   }
 
   if (b.riskPenalty === 0) {

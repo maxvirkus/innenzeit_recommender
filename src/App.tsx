@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { MoodSelector } from './components/MoodSelector';
 import { TimeOfDaySelector } from './components/TimeOfDaySelector';
 import { RecommendationResult } from './components/RecommendationResult';
-import { DebugPanel } from './components/DebugPanel';
 import { CalculationWalkthrough } from './components/CalculationWalkthrough';
 import { BackgroundPage } from './components/BackgroundPage';
 import { SettingsPanel } from './components/SettingsPanel';
@@ -110,7 +109,7 @@ function RecommenderApp() {
         <h1>Innenzeit Recommender Test</h1>
         <p className="intro">
           Wähle 1 bis maximal 3 Zustände aus. Der Prototyp zeigt eine empfohlene
-          Übung, zwei Alternativen und eine Debug-Ansicht.
+          Übung, zwei Alternativen und eine nachvollziehbare Live-Berechnung.
         </p>
       </header>
 
@@ -145,15 +144,6 @@ function RecommenderApp() {
               timeOfDay={timeOfDay}
               settings={settings}
               userIntent={userIntent}
-            />
-          )}
-
-          {hasSelection && (
-            <DebugPanel
-              result={result}
-              selectedMoodIds={selected}
-              longTermGoals={settings.longTermGoals}
-              historyCount={history.length}
             />
           )}
 

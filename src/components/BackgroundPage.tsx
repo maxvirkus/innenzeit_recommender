@@ -1,6 +1,11 @@
 import { EXERCISES } from '../data/exercises';
-import { DIMENSION_LABELS, STATE_GOAL_LABELS } from '../domain/explain';
-import type { DepthCategory } from '../domain/types';
+import { SCIENTIFIC_SOURCES } from '../data/scientificSources';
+import {
+  DIMENSION_LABELS,
+  MECHANISM_LABELS,
+  STATE_GOAL_LABELS,
+} from '../domain/explain';
+import type { DepthCategory, Mechanism } from '../domain/types';
 
 const PIPELINE: { title: string; desc: string }[] = [
   {
@@ -13,19 +18,19 @@ const PIPELINE: { title: string; desc: string }[] = [
   },
   {
     title: 'Zustandsziel',
-    desc: 'Eine von acht Triage-Regeln bestimmt das kurzfristige Ziel.',
+    desc: 'Triage-Regeln (Sicherheit zuerst) bestimmen das kurzfristige Ziel.',
   },
   {
     title: 'Sicherheitsfilter',
-    desc: 'Riskante Übungen werden für das Profil ausgeschlossen.',
+    desc: 'Riskante Übungen werden hart ausgeschlossen, der Rest behutsam dosiert.',
   },
   {
     title: 'Scoring',
-    desc: 'Jede erlaubte Übung bekommt Punkte aus sechs Bausteinen.',
+    desc: 'Jede erlaubte Übung bekommt Punkte aus mehreren Bausteinen.',
   },
   {
     title: 'Ranking',
-    desc: 'Höchster Score = Empfehlung, danach zwei Alternativen.',
+    desc: 'Bester Score = Empfehlung, danach zwei Alternativen.',
   },
 ];
 
@@ -42,9 +47,12 @@ const DIMENSIONS: {
 ];
 
 const TRIAGE: { rule: string; goal: keyof typeof STATE_GOAL_LABELS }[] = [
-  { rule: 'Hohe Schwere + gedrückte Stimmung', goal: 'emotional_support' },
+  { rule: 'Stabilität sehr niedrig, ohne akuten Stress — erst Halt geben', goal: 'grounding' },
   { rule: '„Gestresst“ gewählt oder Stress hoch', goal: 'stress_reduction' },
-  { rule: 'Stabilität niedrig', goal: 'grounding' },
+  {
+    rule: 'Hohe Schwere + gedrückte Stimmung',
+    goal: 'emotional_support',
+  },
   { rule: 'Niedrige Energie ohne Stress', goal: 'gentle_activation' },
   { rule: '„Energiegeladen“ gewählt', goal: 'focus' },
   { rule: 'Gute Stimmung, kein Stress/Schwere', goal: 'positive_integration' },
@@ -64,8 +72,13 @@ const BUILDING_BLOCKS: {
   },
   {
     name: 'ProfilFit',
-    what: 'Wirkt die Übung genau gegen das, was das Profil gerade braucht? (Skalarprodukt aus Wirkung × Bedarf).',
+    what: 'Bringt die Übung das Profil näher an einen ausgeglichenen Ziel-Zustand? Verglichen wird der Abstand vorher/nachher.',
     scale: '-4 … +6',
+  },
+  {
+    name: 'MechanismFit',
+    what: 'Passt das angenommene Wirkprinzip der Übung zum Zustandsziel?',
+    scale: '0 … +4',
   },
   {
     name: 'LangzeitFit',
@@ -74,23 +87,39 @@ const BUILDING_BLOCKS: {
   },
   {
     name: 'Persönl. Evidenz',
-    what: 'Wie hat die Person die Übung in ähnlichen Lagen früher bewertet (ab 3 Einträgen)?',
+    what: 'Wie hat die Person ähnliche Übungen früher bewertet? Bayesianisch geglättet, damit wenige Rückmeldungen nicht überreagieren.',
     scale: '-2 … +2',
   },
   {
-    name: 'Wissenschaft',
-    what: 'Wie gut ist die Übung durch Studien gestützt?',
+    name: 'EvidenzFit',
+    what: 'Plausibilität aus mehreren Facetten (Studienlage, Wirkmechanismus, Eignung, App-Tauglichkeit, Sicherheit).',
     scale: '0 … +3',
   },
   {
+    name: 'Sicherheits-Faktor',
+    what: 'Dämpft riskante, aber erlaubte Übungen je nach Zustand (z. B. intensiv bei hohem Stress).',
+    scale: '×0 … ×1',
+  },
+  {
     name: 'Risiko',
-    what: 'Mögliche Kontraindikationen — wird abgezogen.',
+    what: 'Mögliche Kontraindikationen — wird zusätzlich moderat abgezogen.',
     scale: '0 … -3',
   },
 ];
 
+const MECHANISMS: Mechanism[] = [
+  'parasympathetic_activation',
+  'attentional_anchoring',
+  'sensory_grounding',
+  'cognitive_reappraisal',
+  'self_compassion',
+  'positive_affect_broadening',
+  'behavioral_activation',
+  'interoceptive_awareness',
+];
+
 const DEPTH_LABELS: Record<DepthCategory, string> = {
-  basic: 'Einsteig',
+  basic: 'Einstieg',
   moderate: 'Mittel',
   deep: 'Tief',
 };
@@ -107,7 +136,9 @@ export function BackgroundPage() {
         <p className="intro">
           Der Recommender folgt einer festen, nachvollziehbaren Kette. Keine
           Blackbox: Jeder Schritt ist eine einfache Regel oder eine Rechnung mit
-          wenigen Zahlen.
+          wenigen Zahlen. Die wissenschaftlichen Bezüge sind als{' '}
+          <em>Plausibilität</em> gedacht — nicht als Beweis, dass eine Übung
+          „optimal“ ist.
         </p>
       </header>
 
@@ -173,9 +204,10 @@ export function BackgroundPage() {
       <section className="bg-section">
         <h2>Schritt 2 · Zustandsziel (Triage)</h2>
         <p className="intro">
-          Acht Regeln werden von oben nach unten geprüft — von der
-          spezifischsten Not zur allgemeinsten. Die <strong>erste</strong>{' '}
-          zutreffende Regel gewinnt.
+          Die Regeln werden von oben nach unten geprüft — <strong>Sicherheit
+          zuerst</strong>: Wer wenig Halt hat, wird zuerst stabilisiert, bevor
+          tiefer gearbeitet wird. Die <strong>erste</strong> zutreffende Regel
+          gewinnt.
         </p>
         <ol className="bg-triage">
           {TRIAGE.map((t, i) => (
@@ -193,18 +225,22 @@ export function BackgroundPage() {
 
       {/* Safety */}
       <section className="bg-section">
-        <h2>Schritt 3 · Sicherheitsfilter</h2>
+        <h2>Schritt 3 · Sicherheit: harter Filter + sanfte Dosierung</h2>
         <p className="intro">
-          Vor der Bewertung fliegen unpassende oder riskante Übungen raus —
-          unabhängig vom Zustandsziel. Beispiele: intensive Atemtechniken bei
-          hohem Stress, Tiefenpraxis ohne Freigabe bei instabilem Profil. Was
-          ausgeschlossen wird, zeigt der Recommender transparent an.
+          Sicherheit wirkt auf zwei Ebenen. Zuerst ein <strong>harter
+          Filter</strong>: riskante oder unpassende Übungen werden ganz
+          ausgeschlossen (z. B. intensive Atemtechniken bei hohem Stress,
+          Tiefenpraxis ohne Freigabe bei instabilem Profil). Danach ein{' '}
+          <strong>weicher Sicherheits-Faktor</strong>, der erlaubte, aber für den
+          aktuellen Zustand etwas fordernde Übungen behutsamer dosiert, statt sie
+          komplett auszuschließen. Was hart ausgeschlossen wird, zeigt der
+          Recommender transparent an.
         </p>
       </section>
 
       {/* Scoring */}
       <section className="bg-section">
-        <h2>Schritt 4 · Scoring aus sechs Bausteinen</h2>
+        <h2>Schritt 4 · Scoring aus mehreren Bausteinen</h2>
         <div className="bg-blocks">
           {BUILDING_BLOCKS.map((b) => (
             <div className="bg-block" key={b.name}>
@@ -225,8 +261,7 @@ export function BackgroundPage() {
             </p>
             <p>
               Der unmittelbare Zustand zählt am meisten: StateFit &amp; ProfilFit
-              dominieren, Langzeitziele treten zurück, Risiko wird stark
-              bestraft.
+              dominieren, Langzeitziele treten zurück.
             </p>
           </div>
           <div className="bg-mode bg-mode-calm">
@@ -246,11 +281,55 @@ export function BackgroundPage() {
         <p className="intro">
           Ohne ProfilFit würden alle Übungen eines Zustandsziels gleich punkten —
           jede Stress-Kombination führte zur exakt gleichen Übung. Der ProfilFit
-          vergleicht die <strong>Wirkung</strong> jeder Übung mit dem{' '}
-          <strong>konkreten Bedarf</strong> des Profils. So bekommen
-          unterschiedliche Stimmungslagen unterschiedliche Empfehlungen — und das
-          bleibt erklärbar: „belohnt wird die Übung, deren Wirkung dem aktuellen
-          Zustand am besten entgegenwirkt“.
+          simuliert die <strong>Wirkung</strong> jeder Übung auf dein Profil und
+          prüft, ob der Abstand zu einem ausgeglichenen <strong>Ziel-Zustand</strong>{' '}
+          kleiner wird. So bekommen unterschiedliche Stimmungslagen
+          unterschiedliche Empfehlungen — und das bleibt erklärbar: „belohnt wird
+          die Übung, die dich spürbar näher an Balance bringt“.
+        </p>
+      </section>
+
+      {/* Mechanisms */}
+      <section className="bg-section">
+        <h2>Wirkprinzipien statt fester Listen</h2>
+        <p className="intro">
+          Statt Übungen fest an Ziele zu koppeln, beschreibt jede Übung ihre
+          angenommenen <strong>Wirkprinzipien</strong>. Passt ein Wirkprinzip zum
+          Zustandsziel, steigt der MechanismFit. Das hält die Logik erklärbar und
+          erweiterbar.
+        </p>
+        <div className="bg-blocks">
+          {MECHANISMS.map((m) => (
+            <div className="bg-block" key={m}>
+              <div className="bg-block-head">
+                <span className="bg-block-name">{MECHANISM_LABELS[m]}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Evidence profile */}
+      <section className="bg-section">
+        <h2>Evidenz als mehrere Facetten</h2>
+        <p className="intro">
+          Früher gab es eine einzelne „Wissenschafts“-Zahl. Jetzt hat jede Übung
+          ein <strong>Evidenz-Profil</strong> aus fünf Facetten (jeweils 0–3):
+          Studienlage, Plausibilität des Wirkmechanismus, Passung zur Zielgruppe,
+          App-Tauglichkeit und Sicherheits-Zuversicht. Daraus entsteht der
+          EvidenzFit — bewusst als Leitplanke, nicht als Beweis.
+        </p>
+      </section>
+
+      {/* Personalization */}
+      <section className="bg-section">
+        <h2>Personalisierung mit Augenmaß</h2>
+        <p className="intro">
+          Rückmeldungen fließen <strong>bayesianisch geglättet</strong> ein: Ohne
+          Daten bleibt die persönliche Evidenz neutral, mit mehr Rückmeldungen
+          zählt sie stärker. Bewertungen übertragen teilweise auf verwandte
+          Übungen (gleiche Übungsfamilie) und ähnliche Situationen, statt nur auf
+          exakt dieselbe Übung im exakt gleichen Zustand.
         </p>
       </section>
 
@@ -269,7 +348,7 @@ export function BackgroundPage() {
                 <th>Dauer</th>
                 <th>Tiefe</th>
                 <th>Zustandsziele</th>
-                <th>Wiss.</th>
+                <th>Evidenz</th>
                 <th>Risiko</th>
               </tr>
             </thead>
@@ -284,13 +363,43 @@ export function BackgroundPage() {
                       .map((g) => STATE_GOAL_LABELS[g])
                       .join(', ')}
                   </td>
-                  <td className="num">{e.sciencePrior}</td>
+                  <td className="num">{e.evidenceProfile.evidenceStrength}</td>
                   <td className="num">{e.contraindicationRisk}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      </section>
+
+      {/* Sources */}
+      <section className="bg-section">
+        <h2>Quellen</h2>
+        <p className="intro">
+          Zentrale Belege, auf die sich die Wirkprinzipien und das Evidenz-Profil
+          stützen. Sie machen die Empfehlungen <em>plausibel</em>, nicht
+          bewiesen.
+        </p>
+        <ul className="bg-sources">
+          {SCIENTIFIC_SOURCES.map((s) => (
+            <li key={s.id}>
+              <div className="bg-source-head">
+                {s.url ? (
+                  <a href={s.url} target="_blank" rel="noopener noreferrer">
+                    {s.title}
+                  </a>
+                ) : (
+                  <span>{s.title}</span>
+                )}
+              </div>
+              <div className="bg-source-meta">
+                {s.authors}
+                {s.year ? ` · ${s.year}` : ''}
+              </div>
+              <p className="bg-source-relevance">{s.relevance}</p>
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   );

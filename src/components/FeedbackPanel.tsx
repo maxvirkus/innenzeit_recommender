@@ -33,6 +33,9 @@ export function FeedbackPanel({
   onSaveToProfile,
 }: Props) {
   const [rating, setRating] = useState<Rating>(4);
+  const [clarity, setClarity] = useState<Rating>(4);
+  const [comment, setComment] = useState('');
+  const [betterFit, setBetterFit] = useState('');
   const [profileStatus, setProfileStatus] = useState('');
   const [teamStatus, setTeamStatus] = useState('');
   const [teamFeedback, setTeamFeedback] = useState<StoredFeedback[] | null>(
@@ -43,11 +46,16 @@ export function FeedbackPanel({
 
   const build = (): SessionFeedback => ({
     practiceId: primary.id,
+    family: primary.family,
     selectedMoodIds,
     profile,
     stateGoal,
     longTermGoals,
     rating,
+    fitFeeling: rating,
+    explanationClarity: clarity,
+    comment: comment.trim() || undefined,
+    betterFit: betterFit.trim() || undefined,
     timestamp: new Date().toISOString(),
   });
 
@@ -115,6 +123,46 @@ export function FeedbackPanel({
           </option>
         ))}
       </select>
+
+      <label className="field-label" htmlFor="clarity">
+        War die Begründung verständlich? (1 = gar nicht, 5 = sehr klar)
+      </label>
+      <select
+        id="clarity"
+        className="rating-select"
+        value={clarity}
+        onChange={(e) => setClarity(Number(e.target.value) as Rating)}
+      >
+        {[1, 2, 3, 4, 5].map((n) => (
+          <option key={n} value={n}>
+            {n}
+          </option>
+        ))}
+      </select>
+
+      <label className="field-label" htmlFor="betterFit">
+        Hätte eine andere Übung besser gepasst? (optional)
+      </label>
+      <input
+        id="betterFit"
+        className="rating-select"
+        type="text"
+        value={betterFit}
+        placeholder="z. B. Box Breathing"
+        onChange={(e) => setBetterFit(e.target.value)}
+      />
+
+      <label className="field-label" htmlFor="comment">
+        Kommentar (optional)
+      </label>
+      <textarea
+        id="comment"
+        className="rating-select"
+        rows={2}
+        value={comment}
+        placeholder="Was war gut, was hat gefehlt?"
+        onChange={(e) => setComment(e.target.value)}
+      />
 
       {/* Two clearly separated destinations */}
       <div className="dest-grid">

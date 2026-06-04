@@ -32,15 +32,20 @@ export function explainStateGoal(
   timeOfDay: TimeOfDay,
   _userIntent: UserIntent,
 ): StateGoalExplanation {
-  // 1. Heaviness + sadness → compassionate, supportive practices first.
-  //    (Body Scan / Self-Compassion are calming, so this stays safe even when
-  //    stability is also low.)
-  if (profile.heaviness >= 1.5 && profile.valence <= -1)
+  // 1. Very low stability without acute stress → first give stability and an
+  //    anchor. Safety-wise it is better to ground before working emotionally
+  //    deeper, even when heaviness is also high. Acute stress is handled by the
+  //    next rule (down-regulation fits a wired, stressed state better).
+  if (
+    profile.stability <= -1.5 &&
+    profile.stress < 1.2 &&
+    !selectedMoodIds.includes('stressed')
+  )
     return {
-      goal: 'emotional_support',
+      goal: 'grounding',
       ruleIndex: 1,
       reason:
-        'Hohe Schwere (≥ 1,5) bei gedrückter Stimmung (≤ -1) → zuerst emotional auffangen.',
+        'Stabilität ist niedrig (≤ -1,5) ohne akuten Stress → zuerst erden und stabilisieren, bevor tiefer gearbeitet wird.',
     };
 
   // 2. Acute stress → downregulate.
@@ -49,16 +54,17 @@ export function explainStateGoal(
       goal: 'stress_reduction',
       ruleIndex: 2,
       reason: selectedMoodIds.includes('stressed')
-        ? '„Gestresst“ wurde gewählt → Stress herunterregulieren.'
-        : 'Stress ist hoch (≥ 1,2) → Stress herunterregulieren.',
+        ? '„Gestresst“ wurde gewählt → Stress herunterregulieren statt aktivieren.'
+        : 'Stress ist hoch (≥ 1,2) → Stress herunterregulieren statt aktivieren.',
     };
 
-  // 3. Ungrounded → anchor and stabilise.
-  if (profile.stability <= -1.5)
+  // 3. Heaviness + low mood (with sufficient stability) → emotional support.
+  if (profile.heaviness >= 1.5 && profile.valence <= -1)
     return {
-      goal: 'grounding',
+      goal: 'emotional_support',
       ruleIndex: 3,
-      reason: 'Stabilität ist niedrig (≤ -1,5) → erden und stabilisieren.',
+      reason:
+        'Hohe Schwere (≥ 1,5) bei gedrückter Stimmung (≤ -1) und ausreichender Stabilität → emotionalen Halt geben.',
     };
 
   // 4. Low energy without stress → lift gently.
@@ -75,7 +81,7 @@ export function explainStateGoal(
     return {
       goal: 'focus',
       ruleIndex: 5,
-      reason: '„Energiegeladen“ wurde gewählt → Energie in Fokus lenken.',
+      reason: '„Energiegeladen“ wurde gewählt → Energie in Fokus bündeln.',
     };
 
   // 6. Bright and calm → deepen the positive state.
@@ -94,11 +100,11 @@ export function explainStateGoal(
       reason: 'Keine spezifische Notlage, Tageszeit Abend → zur Ruhe kommen.',
     };
 
-  // 8. Default.
+  // 8. Default → quiet focus.
   return {
     goal: 'focus',
     ruleIndex: 8,
-    reason: 'Keine andere Regel trifft zu → Standard: Fokus & Klarheit.',
+    reason: 'Keine andere Regel trifft zu → Standard: Aufmerksamkeit ruhig bündeln.',
   };
 }
 

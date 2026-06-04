@@ -1185,6 +1185,109 @@ h2 {
   color: var(--text-muted);
 }
 
+/* Step 4 — plain-language direction list */
+.calc-directions {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+}
+
+.calc-directions li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.calc-dir-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.calc-dir-word {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Step 5 — plain-language reasons */
+.calc-reasons {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.calc-reasons li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.calc-reasons .reason-mark {
+  flex: none;
+  font-weight: 700;
+}
+
+.calc-reasons .reason-pos .reason-mark {
+  color: var(--accent);
+}
+
+.calc-reasons .reason-neg {
+  color: var(--text-muted);
+}
+
+/* Optional technical details block */
+.calc-technical {
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.calc-technical > summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Sources list on the background page */
+.bg-sources {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bg-sources li {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.bg-source-head a {
+  font-weight: 600;
+}
+
+.bg-source-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 2px 0 6px;
+}
+
+.bg-source-relevance {
+  font-size: 13px;
+  margin: 0;
+}
+
 /* ============================================================
    Background / explainer page
    ============================================================ */

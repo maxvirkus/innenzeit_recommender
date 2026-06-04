@@ -3,9 +3,12 @@ import { recommendExercises } from '../domain/recommender';
 import { deriveStateGoal } from '../domain/deriveStateGoal';
 import { calculateMoodProfile } from '../domain/calculateMoodProfile';
 import {
+  calculateEvidenceFit,
   calculateLongTermGoalFit,
+  calculateMechanismFit,
   calculatePersonalEvidenceScore,
-  calculateProfileFit,
+  calculateProfileImprovementFit,
+  calculateSafetyMultiplier,
   calculateStateFit,
 } from '../domain/scoring';
 import { EXERCISES_BY_ID } from '../data/exercises';
@@ -70,13 +73,13 @@ describe('recommender – core scenarios', () => {
     expect(excludedIds).toContain('goal_visualization');
   });
 
-  it('sad + heavy -> emotional_support, power_breath excluded, self_compassion kept', () => {
+  it('sad + heavy -> grounding (stabilise first), power_breath excluded', () => {
     const r = run(['sad', 'heavy']);
-    expect(r.stateGoal).toBe('emotional_support');
+    // Stability-first triage: very low stability routes to grounding before
+    // deeper emotional work, for safety.
+    expect(r.stateGoal).toBe('grounding');
     const excludedIds = r.excludedExercises.map((e) => e.exercise.id);
     expect(excludedIds).toContain('power_breath');
-    // self_compassion is gated by L3 (not by the heaviness rule); it is excluded
-    // here only because deep practice is not enabled, not for safety reasons.
     expect(excludedIds).not.toContain('gratitude_reflection');
   });
 
@@ -131,10 +134,10 @@ describe('deriveStateGoal', () => {
     const p = calculateMoodProfile(['energized']);
     expect(deriveStateGoal(p, ['energized'], 'midday', intent)).toBe('focus');
   });
-  it('heavy + sad -> emotional_support', () => {
+  it('heavy + sad -> grounding (stability-first)', () => {
     const p = calculateMoodProfile(['heavy', 'sad']);
     expect(deriveStateGoal(p, ['heavy', 'sad'], 'midday', intent)).toBe(
-      'emotional_support',
+      'grounding',
     );
   });
   it('evening fallback -> evening_regulation', () => {
@@ -165,27 +168,80 @@ describe('scoring helpers', () => {
     expect(fit).toBe(4);
   });
 
-  it('personal evidence is 0 with fewer than 3 relevant entries', () => {
+  it('personal evidence stays near neutral with few entries (Bayesian smoothing)', () => {
     const ex = EXERCISES_BY_ID['physiological_sigh'];
     const history = [
       baseFeedback({ practiceId: 'physiological_sigh', stateGoal: 'stress_reduction' }),
       baseFeedback({ practiceId: 'physiological_sigh', stateGoal: 'stress_reduction' }),
     ];
-    expect(calculatePersonalEvidenceScore(ex, 'stress_reduction', history)).toBe(0);
+    const score = calculatePersonalEvidenceScore(ex, 'stress_reduction', history);
+    // Two mildly positive ratings nudge but don't dominate.
+    expect(score).toBeGreaterThan(0);
+    expect(score).toBeLessThan(0.4);
   });
 
-  it('low ratings drive personal evidence negative', () => {
+  it('feltWorse drives personal evidence strongly negative', () => {
     const ex = EXERCISES_BY_ID['physiological_sigh'];
     const history = Array.from({ length: 3 }, () =>
       baseFeedback({
         practiceId: 'physiological_sigh',
         stateGoal: 'stress_reduction',
-        rating: 1,
+        rating: 2,
+        feltWorse: true,
       }),
     );
     expect(
       calculatePersonalEvidenceScore(ex, 'stress_reduction', history),
-    ).toBeLessThan(0);
+    ).toBeLessThan(-0.5);
+  });
+
+  it('feedback transfers partially across the same family', () => {
+    const ex = EXERCISES_BY_ID['physiological_sigh'];
+    const sameFamily = ex.family;
+    const history = [
+      baseFeedback({
+        practiceId: 'some_other_practice',
+        family: sameFamily,
+        stateGoal: 'stress_reduction',
+        rating: 5,
+        completed: true,
+      }),
+    ];
+    // A strong positive rating on a sibling practice nudges this one upward.
+    expect(
+      calculatePersonalEvidenceScore(ex, 'stress_reduction', history),
+    ).toBeGreaterThan(0);
+  });
+
+  it('calculateMechanismFit rewards mechanisms matching the goal', () => {
+    const sigh = EXERCISES_BY_ID['physiological_sigh'];
+    // slow/parasympathetic breathing should fit stress_reduction better than focus
+    expect(
+      calculateMechanismFit(sigh, 'stress_reduction'),
+    ).toBeGreaterThanOrEqual(calculateMechanismFit(sigh, 'gentle_activation'));
+  });
+
+  it('calculateEvidenceFit stays within 0..3', () => {
+    for (const id of Object.keys(EXERCISES_BY_ID)) {
+      const v = calculateEvidenceFit(EXERCISES_BY_ID[id].evidenceProfile);
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(3);
+    }
+  });
+
+  it('safety multiplier dampens intense practices under high stress', () => {
+    const settings: UserSettings = {
+      longTermGoals: [],
+      breathworkExperience: 'some',
+      meditationExperience: 'some',
+      allowDeepPractice: false,
+      allowCombinedSessions: false,
+    };
+    const power = EXERCISES_BY_ID['power_breath'];
+    const highStress = calculateMoodProfile(['stressed']);
+    const m = calculateSafetyMultiplier(highStress, power, settings, 'midday');
+    expect(m).toBeLessThan(1);
+    expect(m).toBeGreaterThanOrEqual(0);
   });
 });
 
@@ -222,14 +278,20 @@ describe('profile fit – differentiation within a goal', () => {
     const sigh = EXERCISES_BY_ID['physiological_sigh']; // strong stress down
     const stressed = calculateMoodProfile(['stressed']);
     const calm = calculateMoodProfile(['peaceful']);
-    expect(calculateProfileFit(sigh, stressed)).toBeGreaterThan(0);
-    expect(calculateProfileFit(sigh, calm)).toBeLessThanOrEqual(0);
+    expect(
+      calculateProfileImprovementFit(sigh, stressed, 'stress_reduction'),
+    ).toBeGreaterThan(0);
+    expect(
+      calculateProfileImprovementFit(sigh, calm, 'stress_reduction'),
+    ).toBeLessThanOrEqual(0);
   });
 
   it('rewards a gentle activator for a flat, low-energy profile', () => {
     const act = EXERCISES_BY_ID['activating_breath']; // raises energy
     const tired = calculateMoodProfile(['tired']);
-    expect(calculateProfileFit(act, tired)).toBeGreaterThan(0);
+    expect(
+      calculateProfileImprovementFit(act, tired, 'gentle_activation'),
+    ).toBeGreaterThan(0);
   });
 });
 

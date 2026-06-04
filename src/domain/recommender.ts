@@ -42,21 +42,30 @@ export interface RecommenderInput {
 }
 
 /**
- * Coherent breathing has special placement rules: it must not become the
- * primary suggestion in certain state goals, only an alternative.
+ * Some practices must not become the *primary* suggestion in certain states,
+ * only an alternative.
  */
 function canBePrimary(
   exercise: Exercise,
   stateGoal: StateGoal,
   profile: MoodProfile,
 ): boolean {
-  if (exercise.id !== 'coherent_breathing') return true;
+  // Coherent breathing: keep it out of the primary slot for acute stress and
+  // for activation / emotional support.
+  if (exercise.id === 'coherent_breathing') {
+    if (stateGoal === 'stress_reduction' && profile.stress >= 0.8) return false;
+    if (stateGoal === 'gentle_activation' || stateGoal === 'emotional_support')
+      return false;
+  }
 
-  // Only an alternative for stress reduction, unless stress is clearly low.
-  if (stateGoal === 'stress_reduction' && profile.stress >= 0.8) return false;
-
-  // Never the main suggestion for gentle activation or emotional support.
-  if (stateGoal === 'gentle_activation' || stateGoal === 'emotional_support')
+  // Gratitude must not be the automatic primary for clearly heavy/sad profiles —
+  // an emotionally holding practice should lead instead. Gratitude can still be
+  // an alternative.
+  if (
+    exercise.id === 'gratitude_reflection' &&
+    profile.valence <= -1 &&
+    profile.heaviness >= 1.5
+  )
     return false;
 
   return true;
@@ -102,6 +111,7 @@ export function recommendExercises(
       profile,
       userSettings,
       history,
+      timeOfDay,
     });
     allowed.push({ exercise, score: breakdown.finalScore, breakdown });
   }
@@ -110,8 +120,9 @@ export function recommendExercises(
   // then shorter (lower commitment), then stable id order.
   allowed.sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
-    if (b.exercise.sciencePrior !== a.exercise.sciencePrior)
-      return b.exercise.sciencePrior - a.exercise.sciencePrior;
+    const ae = a.breakdown.evidenceFit;
+    const be = b.breakdown.evidenceFit;
+    if (be !== ae) return be - ae;
     if (a.exercise.durationMinutes !== b.exercise.durationMinutes)
       return a.exercise.durationMinutes - b.exercise.durationMinutes;
     return a.exercise.id.localeCompare(b.exercise.id);
@@ -131,6 +142,12 @@ export function recommendExercises(
     .slice(0, 2)
     .map((s) => s.exercise);
 
+  // Closeness of the runner-up — surfaced as "ähnlich passend" in the UI.
+  const scoreGap =
+    allowed.length >= 2 ? allowed[0].score - allowed[1].score : Infinity;
+  const hasCloseAlternative =
+    allowed.length >= 2 && scoreGap < 0.3 && alternatives.length > 0;
+
   return {
     profile,
     stateGoal,
@@ -138,5 +155,7 @@ export function recommendExercises(
     alternatives,
     excludedExercises: excluded,
     scoredExercises: allowed,
+    scoreGap,
+    hasCloseAlternative,
   };
 }

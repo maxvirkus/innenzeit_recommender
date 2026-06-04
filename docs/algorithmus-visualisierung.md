@@ -86,12 +86,12 @@ Bedarf“ nach „allgemein“. **Die erste zutreffende Regel gewinnt.**
 
 ```mermaid
 flowchart TD
-    S{"heaviness ≥ 1.5<br/>UND valence ≤ −1?"} -->|ja| G1["emotional_support<br/>(mitfühlend halten)"]
-    S -->|nein| T{"'Gestresst' gewählt<br/>ODER stress ≥ 1.2?"}
+    U{"stability ≤ −1.5<br/>UND stress < 1.2<br/>UND nicht 'Gestresst'?"} -->|ja| G3["grounding<br/>(erden, Halt geben)"]
+    U -->|nein| T{"'Gestresst' gewählt<br/>ODER stress ≥ 1.2?"}
     T -->|ja| G2["stress_reduction<br/>(runterregulieren)"]
-    T -->|nein| U{"stability ≤ −1.5?"}
-    U -->|ja| G3["grounding<br/>(erden, Halt geben)"]
-    U -->|nein| V{"energy ≤ −1.2<br/>UND stress < 1?"}
+    T -->|nein| S{"heaviness ≥ 1.5<br/>UND valence ≤ −1?"}
+    S -->|ja| G1["emotional_support<br/>(mitfühlend halten)"]
+    S -->|nein| V{"energy ≤ −1.2<br/>UND stress < 1?"}
     V -->|ja| G4["gentle_activation<br/>(sanft beleben)"]
     V -->|nein| W{"'Energiegeladen'<br/>gewählt?"}
     W -->|ja| G5["focus<br/>(Energie bündeln)"]
@@ -102,9 +102,12 @@ flowchart TD
     Y -->|nein| G8["focus (Default)"]
 ```
 
-> Die Reihenfolge ist Absicht: Emotionaler Bedarf (Schwere/Traurigkeit) kommt
-> **vor** Stressregulation, damit jemand in akuter Schwere nicht nur eine
-> Atemtechnik, sondern eine **stützende** Übung bekommt.
+> Die Reihenfolge ist Absicht und **sicherheitsorientiert**: Wer wenig Halt hat
+> (sehr niedrige Stabilität) **und** nicht akut gestresst ist, wird **zuerst
+> geerdet**, bevor emotional tiefer gearbeitet wird. Akuter Stress geht direkt in
+> die Beruhigung (ein „aufgedrehter“ Zustand passt besser zu Down-Regulation als
+> zu Erdung).
+
 
 ---
 
@@ -139,23 +142,25 @@ Verarbeitung auch bei geringer Stabilität verfügbar bleibt.
 
 ## 5. Schritt 4 – Das Scoring (Punkte pro Übung)
 
-Jede übrig gebliebene Übung bekommt eine Punktzahl aus **sechs Bausteinen**:
+Jede übrig gebliebene Übung bekommt eine Punktzahl aus mehreren **Bausteinen**:
 
-| Baustein            | Was es misst                                        | Wertebereich |
-| ------------------- | --------------------------------------------------- | ------------ |
-| `stateFit`          | Passt die Übung zur **Kategorie** (Ziel für jetzt)? | −2, +1, +5   |
-| `profileFit`        | Wirkt die Übung gegen **genau diesen** Zustand?     | −4 … +6     |
-| `longTermGoalFit`   | Passt sie zu den **Langzeitzielen** der Person?     | 0 … +4       |
-| `personalEvidence`  | Wie hat die Person sie **früher bewertet**?         | −2 … +2      |
-| `sciencePrior`      | Wie gut ist sie **wissenschaftlich** gestützt?      | 0 … 3        |
-| `riskPenalty`       | **Abzug** für Risiko (`contraindicationRisk`)       | 0 … 3        |
+| Baustein            | Was es misst                                              | Wertebereich |
+| ------------------- | --------------------------------------------------------- | ------------ |
+| `stateFit`          | Passt die Übung zur **Kategorie** (Ziel für jetzt)?       | −2, +1, +5   |
+| `profileFit`        | Bringt sie das Profil **näher an einen Ziel-Zustand**?    | −4 … +6      |
+| `mechanismFit`      | Passt das **Wirkprinzip** der Übung zum Ziel?             | 0 … +4       |
+| `longTermGoalFit`   | Passt sie zu den **Langzeitzielen** der Person?           | 0 … +4       |
+| `personalEvidence`  | Wie hat die Person **ähnliche Übungen** bewertet?         | −2 … +2      |
+| `evidenceFit`       | **Plausibilität** aus dem Evidenz-Profil (5 Facetten)     | 0 … 3        |
+| `safetyMultiplier`  | **Weiche** Sicherheits-Dämpfung (Faktor)                  | 0 … 1        |
+| `riskPenalty`       | **Abzug** für Risiko (`contraindicationRisk`)             | 0 … 3        |
 
-> **Das war der entscheidende Fix.** Vorher hängte die Empfehlung *nur* am
-> `stateFit` (dem einen abgeleiteten Ziel). Innerhalb eines Ziels war der
-> Gewinner damit immer dieselbe Übung – deshalb landeten **alle** Paare auf nur
-> 3 Übungen. Der neue `profileFit` unterscheidet **innerhalb** der Kategorie
-> danach, wie gut eine Übung den *konkreten* Zustand ausgleicht. Dadurch führen
-> unterschiedliche Stimmungs-Kombis zu unterschiedlichen Übungen.
+> **Idee dahinter.** `stateFit` hält die Empfehlung in der richtigen Kategorie.
+> `profileFit` differenziert **innerhalb** der Kategorie danach, wie gut eine
+> Übung den *konkreten* Zustand Richtung Balance bewegt – deshalb führen
+> unterschiedliche Stimmungs-Kombis zu unterschiedlichen Übungen. `mechanismFit`
+> und `evidenceFit` halten die Auswahl an plausible Wirkprinzipien gekoppelt,
+> ohne Übungen fest an Ziele zu verdrahten.
 
 ### 5a. State Fit – abgestuft statt schwarz/weiß
 
@@ -169,94 +174,100 @@ $$
 $$
 
 Beispiel benachbart: Eine `grounding`-Übung ist auch ein **Teil**-Treffer für
-`stress_reduction` und `evening_regulation` (verwandte Beruhigungs­ziele) – sie
-wird also nicht so hart bestraft wie eine völlig unpassende Übung.
+`stress_reduction` und `evening_regulation` (verwandte Beruhigungs­ziele).
 
-### 5b. Profile Fit – „wirkt die Übung gegen genau diesen Zustand?“
+### 5b. Profile Fit – „bringt die Übung mich näher an Balance?“
 
-Das ist der neue Kern. Jede Übung trägt einen **Wirkungs-Vektor** `targets`:
-wie sie die 5 Dimensionen verschiebt (z. B. Physiological Sigh: `stress −3`;
-Aktivierende Atmung: `energy +2`). Aus dem Profil bauen wir den **Bedarfs-Vektor**
-$D$ – wie weit und in welche Richtung die Person zurück Richtung Balance soll:
-
-$$
-\begin{aligned}
-D_\text{stress} &= -\max(0,\ \text{stress}) \quad (\text{Stress senken})\\
-D_\text{heaviness} &= -\max(0,\ \text{heaviness}) \quad (\text{Schwere senken})\\
-D_\text{stability} &= \max(0,\ -\text{stability}) \quad (\text{Halt anheben})\\
-D_\text{valence} &= \max(0,\ -\text{valence}) \quad (\text{Stimmung anheben})\\
-D_\text{energy} &= \begin{cases} -\text{energy} & \text{Energie hoch \& gestresst → runter}\\ -\text{energy} & \text{Energie niedrig \& ruhig → hoch}\\ 0 & \text{sonst}\end{cases}
-\end{aligned}
-$$
-
-Der `profileFit` ist das **Skalarprodukt** aus Wirkung und Bedarf (skaliert,
-gedeckelt auf −4…+6):
+Jede Übung trägt einen **Wirkungs-Vektor** `targets` (wie sie die 5 Dimensionen
+verschiebt). Statt eines Skalarprodukts vergleicht der `profileFit` jetzt
+**Abstände**: Zum Zustandsziel gehört ein **Ziel-Profil** $Z$ (Stress/Schwere
+auf 0, Stabilität leicht positiv, Stimmung mindestens neutral, Energie je nach
+Ziel). Wir simulieren das Profil **nach** der Übung
+($\text{nachher} = \text{Profil} + \text{targets}$) und messen, ob der
+**gewichtete Abstand** zu $Z$ kleiner wird:
 
 $$
-\text{profileFit} = \operatorname{clamp}\!\left(\frac{1}{3}\sum_{d} \text{targets}_d \cdot D_d,\ -4,\ +6\right)
+\text{profileFit} = \operatorname{clamp}\big(\, d_w(\text{Profil}, Z) - d_w(\text{nachher}, Z),\ -4,\ +6\big)
 $$
 
-> Im Klartext: Eine stress­senkende Übung punktet bei einer gestressten Person
-> hoch – und bei einer bereits ruhigen Person **null oder negativ**. So gewinnt
-> innerhalb derselben Kategorie die Übung, die den **tatsächlichen** Zustand am
-> besten ausgleicht.
+mit gewichtetem Manhattan-Abstand
+$d_w(a,b) = \sum_d w_d\,|a_d - b_d|$ und Gewichten
+$w_\text{stress}=1{,}4,\ w_\text{stability}=1{,}3,\ w_\text{heaviness}=1{,}2,\ w_\text{energy}=1{,}0,\ w_\text{valence}=0{,}8$.
 
-### 5c. Langzeit-Fit
+> Positiv = die Übung **verkleinert** den Abstand zur Balance; negativ = sie
+> würde den Zustand eher verstärken (z. B. eine aktivierende Übung für ein schon
+> aufgedrehtes Profil).
+
+### 5c. Mechanism Fit & Evidence Fit
+
+Jedes Zustandsziel hat **bevorzugte Wirkprinzipien** (z. B. `stress_reduction` →
+beruhigender Atemrhythmus, Aufmerksamkeit verankern). Pro Treffer +2, gedeckelt
+bei +4. Der `evidenceFit` fasst fünf Evidenz-Facetten zusammen (Studienlage,
+Mechanismus-Plausibilität, Zielgruppen-Passung, App-Tauglichkeit,
+Sicherheits-Zuversicht, je 0–3) — bewusst als **Leitplanke**, nicht als Beweis:
 
 $$
-\text{longTermGoalFit} = \min\big(2 \times (\text{Anzahl Treffer}),\; 4\big)
+\text{evidenceFit} = 0{,}3\,e_\text{Studien} + 0{,}25\,e_\text{Mechanismus} + 0{,}15\,e_\text{Zielgruppe} + 0{,}15\,e_\text{App} + 0{,}15\,e_\text{Sicherheit}
 $$
 
-(+2 pro übereinstimmendem Langzeitziel, gedeckelt bei +4.)
+### 5d. Persönliche Evidenz (Bayesianisch geglättet)
 
-### 5d. Persönliche Evidenz
-
-Erst ab **3** vergleichbaren Bewertungen aktiv, sonst neutral (0):
+Statt einer harten Mindestzahl an Einträgen wird zu einem **neutralen Prior**
+hin geglättet. Jede Rückmeldung hat einen beobachteten Effekt
+($0{,}5\,(\text{Rating}-3) + 0{,}5\,\text{abgeschlossen} - 0{,}7\,\text{abgebrochen} - 1{,}5\,\text{schlechter}$)
+und ein Relevanz-Gewicht (gleiche Übung 1,0; gleiche Familie 0,5; gleiches Ziel
+0,3):
 
 $$
-\text{personalEvidence} =
-\begin{cases}
-\varnothing(\text{Bewertungen}) - 3 & \text{ab 3 Einträgen}\\
-0 & \text{sonst}
-\end{cases}
+\text{personalEvidence} = \operatorname{clamp}\!\left(\frac{0\cdot 5 + \sum_i w_i\,\text{effekt}_i}{5 + \sum_i w_i},\ -2,\ +2\right)
 $$
 
-(Eine 5-Sterne-Historie ergibt +2, eine 1-Stern-Historie −2.)
+> Ohne Daten bleibt der Wert neutral; wenige Rückmeldungen verschieben ihn nur
+> leicht, viele stärker. Bewertungen übertragen **teilweise** auf verwandte
+> Übungen.
 
 ### 5e. Die Gesamtformel – zwei Gewichtungs-Modi
-
-Es gibt zwei Modi, je nachdem **wie akut** die Lage ist:
 
 $$
 \textbf{akut} \;\Longleftrightarrow\; \text{stress} \ge 1.2 \;\;\text{oder}\;\; \text{stability} \le -1.5
 $$
 
+Zuerst ein **Basis-Score** (gewichtete Summe), dann der weiche Sicherheits-Faktor
+und der moderate Risiko-Abzug:
+
+$$
+\text{Score} = \text{Basis} \cdot \text{safetyMultiplier} - 0{,}4\,\text{riskPenalty}
+$$
+
 **Akut** (Passung zum Jetzt-Zustand zählt am meisten):
 
 $$
-\text{Score}_{akut} = 0{,}45\,\text{stateFit} + 0{,}5\,\text{profileFit} + 0{,}05\,\text{longTerm} + 0{,}15\,\text{personal} + 0{,}1\,\text{science} - 0{,}5\,\text{risk}
+\text{Basis}_{akut} = 0{,}9\,\text{stateFit} + 1{,}0\,\text{profileFit} + 0{,}6\,\text{mechanismFit} + 0{,}1\,\text{longTerm} + 0{,}4\,\text{personal} + 0{,}4\,\text{evidence}
 $$
 
 **Ruhig** (mehr Raum für Langzeitziele & Vorlieben):
 
 $$
-\text{Score}_{ruhig} = 0{,}35\,\text{stateFit} + 0{,}35\,\text{profileFit} + 0{,}2\,\text{longTerm} + 0{,}2\,\text{personal} + 0{,}15\,\text{science} - 0{,}4\,\text{risk}
+\text{Basis}_{ruhig} = 0{,}7\,\text{stateFit} + 0{,}7\,\text{profileFit} + 0{,}5\,\text{mechanismFit} + 0{,}4\,\text{longTerm} + 0{,}5\,\text{personal} + 0{,}4\,\text{evidence}
 $$
 
-> `stateFit` hält die Empfehlung in der **richtigen Kategorie**, `profileFit`
-> wählt **innerhalb** der Kategorie die am besten passende Übung. Der Risiko-Abzug
-> liegt auf derselben Skala wie der Nutzen, damit Risiko **proportional** dämpft.
+> Sicherheit wirkt **zweistufig**: der harte Filter (Schritt 3) schließt ganz
+> aus, der `safetyMultiplier` dämpft erlaubte, aber für den Zustand fordernde
+> Übungen – ohne Risiko doppelt zu bestrafen.
 
 ```mermaid
 flowchart LR
-    SF["stateFit ×0.45/0.35"] --> SUM(("Σ Score"))
-    PF["profileFit ×0.5/0.35"] --> SUM
-    LT["longTerm ×0.05/0.2"] --> SUM
-    PE["personal ×0.15/0.2"] --> SUM
-    SC["science ×0.1/0.15"] --> SUM
-    RK["risk ×0.5/0.4"] -.Abzug.-> SUM
+    SF["stateFit"] --> SUM(("Σ Basis"))
+    PF["profileFit"] --> SUM
+    MF["mechanismFit"] --> SUM
+    LT["longTerm"] --> SUM
+    PE["personal"] --> SUM
+    EV["evidence"] --> SUM
+    SUM --> MUL["× safetyMultiplier"]
+    RK["risk × 0.4"] -.Abzug.-> MUL
+    MUL --> SC(("Score"))
     style PF fill:#e0f0ff,stroke:#06c
-    style RK fill:#ffe0e0,stroke:#c00
+    style MUL fill:#ffe0e0,stroke:#c00
 ```
 
 ---
@@ -266,73 +277,63 @@ flowchart LR
 Sortiert wird nach **Score absteigend**. Bei Gleichstand entscheidet eine
 **feste** Reihenfolge (damit das Ergebnis reproduzierbar ist):
 
-1. höherer `sciencePrior` (besser belegt)
+1. höherer `evidenceFit` (plausibler gestützt)
 2. kürzere Dauer (`durationMinutes`)
 3. alphabetisch nach `id`
 
 Die **beste geeignete** Übung wird die Hauptempfehlung. Als **Alternativen**
-erscheinen nur Übungen mit **Score > 0** – eine klar unpassende Übung wird
-nie als „gute Alternative“ angezeigt.
+erscheinen nur Übungen mit **Score > 0**. Zusätzlich merkt sich das Ergebnis, ob
+eine Alternative **ähnlich gut** passt (`hasCloseAlternative`, Score-Abstand
+< 0,3) – das wird im UI als „mehrere Übungen passen ähnlich gut“ angezeigt.
 
 ---
 
 ## 7. Komplettes Rechenbeispiel: „Schwer“ + „Froh“
 
-**Schritt 1 – Profil** (siehe Diagramm oben):
+**Schritt 1 – Profil:**
 `valence 0, energy 0, stress +1, heaviness +2, stability −2`
 
 **Schritt 2 – Ziel:**
-Regel 1 prüft `heaviness ≥ 1.5 (2 ✓) UND valence ≤ −1 (0 ✗)` → trifft **nicht**.
-Regel 2 (Stress) ✗ (1 < 1,2). Regel 3 `stability ≤ −1.5 (−2 ✓)` → **`grounding`**.
+Regel 1 (grounding) prüft `stability ≤ −1.5 (−2 ✓) UND stress < 1.2 (1 ✓) UND
+nicht 'Gestresst' (✓)` → trifft zu → **`grounding`**.
 
 **Schritt 3 – Sicherheit:**
 `stability −2` ist sehr niedrig. **Power Breath** (Schnellatmung, Risiko 3) →
 **raus**. So verhindert das Worst-Case-Pooling genau den gefährlichen Fall.
 
-**Schritt 4 – Scoring** (akut, weil `stability ≤ −1.5`). Bedarf
-$D$: `stress −1, heaviness −2, stability +2`. Auszug (Score = 0,45·stateFit +
-0,5·profileFit + 0,1·science):
+**Schritt 4 – Scoring** (akut, weil `stability ≤ −1.5`): Übungen, die den Abstand
+zum Ziel-Profil (Stress 0, Schwere 0, Stabilität +1) am stärksten verkleinern und
+deren Wirkprinzip zu `grounding` passt (Erden über Sinne/Körper, Aufmerksamkeit
+verankern), gewinnen.
 
-| Übung              | stateFit | profileFit (Wirkung gegen $D$)             | Score (akut) |
-| ------------------ | :------: | ------------------------------------------ | :----------: |
-| 5-4-3-2-1          | +5       | $\tfrac{1}{3}(2{+}2{+}4)=2{,}67$           | **3,79**     |
-| Energie-Meditation | +5       | $\tfrac{1}{3}(4{+}2)=2{,}0$                | 3,45         |
-| Physiological Sigh | +5       | $\tfrac{1}{3}(3{+}2)=1{,}67$               | 3,39         |
-| Power Breath       | —        | —                                          | ausgeschl.   |
+→ **Empfehlung: 5-4-3-2-1.** Ihr Wirkungs-Vektor (`stress −2`, `heaviness −1`,
+`stability +2`) bringt das Profil am deutlichsten Richtung Balance, und ihr
+Wirkprinzip (sensorisches Erden) passt direkt zum Ziel.
 
-→ **Empfehlung: 5-4-3-2-1**. Obwohl Physiological Sigh wissenschaftlich besser
-belegt ist, gewinnt 5-4-3-2-1 hier, weil sein Wirkungs-Vektor (`stress −2`,
-`heaviness −1`, `stability +2`) den **konkreten** Bedarf am besten trifft – genau
-das, was `profileFit` leistet. Für ein rein gestresstes Profil (ohne Schwere/
-Instabilität) würde dagegen Physiological Sigh gewinnen.
 
 ---
 
-## 8. Übungs-Katalog (12 Übungen)
+## 8. Übungs-Katalog (16 Übungen)
 
-Die Spalte **Kat.** ist die `depthCategory` (`basic` / `moderate` / `deep`) –
-bewusst **ohne** „L1–3“-Bezeichnung, weil „L1–3“ später für die drei
-Erfahrungs-Stufen *einer einzelnen Übung* reserviert ist. **Wirkung** ist der
-`targets`-Vektor (v=valence, e=energy, s=stress, h=heaviness, st=stability).
+Maßgeblich ist immer der Code ([`src/data/exercises.ts`](../src/data/exercises.ts));
+die vollständige, gepflegte Übersicht steht außerdem im **Hintergrund-Tab** der
+App. Jede Übung trägt jetzt statt einer einzelnen `sciencePrior`-Zahl ein
+**Evidenz-Profil** (5 Facetten), eine **Übungsfamilie** (`family`), explizite
+**Wirkprinzipien** (`mechanisms`) sowie `intensity` und `emotionalDepth` für die
+Sicherheits-Dämpfung.
 
-| Übung                 | Kat.     | Ziele (State Goals)                          | Wirkung (v/e/s/h/st)      | Sci. | Risk | Atem            |
-| --------------------- | -------- | -------------------------------------------- | ------------------------- | :--: | :--: | --------------- |
-| 5-4-3-2-1             | basic    | grounding, stress_reduction                  | 0 / 0 / −2 / −1 / +2       | 2 | 0 | –               |
-| Physiological Sigh    | basic    | stress_reduction, grounding                  | 0 / −1 / −3 / 0 / +1        | 3 | 0 | –               |
-| 4/6 Atmung            | basic    | stress_reduction, evening_reg., grounding    | 0 / −1 / −2 / 0 / +1        | 2 | 0 | –               |
-| Box Breathing         | moderate | focus, stress_reduction                      | 0 / +1 / −1 / 0 / +1       | 2 | 1 | breath_hold     |
-| Kohärentes Atmen      | moderate | positive_integration, evening_reg.           | +1 / 0 / −1 / −1 / +2      | 2 | 0 | –               |
-| Power Breath          | moderate | gentle_activation, focus                     | +1 / +3 / +1 / −1 / −1     | 1 | 3 | rapid_breathing |
-| Body Scan             | moderate | emotional_support, evening_reg., grounding   | +1 / −1 / −1 / −2 / +1      | 2 | 1 | –               |
-| Selbstmitgefühl       | deep     | emotional_support                            | +2 / 0 / −1 / −2 / +1       | 2 | 1 | –               |
-| Zielvisualisierung    | moderate | focus, positive_integration                  | +2 / +1 / 0 / −1 / 0       | 1 | 1 | –               |
-| **Aktivierende Atmung** | basic  | gentle_activation, focus                     | +1 / +2 / 0 / 0 / +1      | 2 | 1 | –               |
-| **Energie-Meditation**  | basic  | gentle_activation, grounding                 | +1 / +1 / 0 / −1 / +2      | 2 | 0 | –               |
-| **Dankbarkeits-Reflexion** | basic | positive_integration, emotional_support  | +2 / 0 / 0 / −1 / +1      | 2 | 0 | –               |
+Zu den 12 bestehenden Übungen kamen **vier niedrigschwellige** dazu, die Lücken
+bei `focus`, `emotional_support` und `grounding` schließen:
 
-Die **drei fett markierten** Übungen sind app-tauglich von zu Hause (Atem- bzw.
-Meditationspraktiken, keine Bewegung im Raum) und schließen die frühere Lücke
-bei `gentle_activation`.
+| Übung                       | Familie          | Ziele                                   | Kat.     |
+| --------------------------- | ---------------- | --------------------------------------- | -------- |
+| Atem zählen                 | attention_focus  | focus, evening_regulation               | basic    |
+| Hand aufs Herz              | self_compassion  | emotional_support, grounding            | basic    |
+| Erdungsatmung               | slow_breathing   | grounding, stress_reduction, evening    | basic    |
+| Emotion im Körper lokalisieren | body_scan     | emotional_support                       | moderate |
+
+Die Spalte **Kat.** ist die `depthCategory` (`basic` / `moderate` / `deep`).
+
 
 ---
 
@@ -344,19 +345,18 @@ gibt.
 
 | State Goal              | Sichere Optionen | Status |
 | ----------------------- | ---------------- | ------ |
-| stress_reduction        | 5-4-3-2-1, Physiological Sigh, 4/6, Box Breathing | gut |
-| grounding               | 5-4-3-2-1, 4/6, Body Scan, Energie-Meditation | gut |
-| emotional_support       | Body Scan, Dankbarkeit, (Selbstmitgefühl, deep) | ok |
-| gentle_activation       | Aktivierende Atmung, Energie-Meditation | **jetzt ok** (vorher Lücke) |
-| focus                   | Box Breathing, Aktivierende Atmung, Zielvisualisierung | gut |
+| stress_reduction        | 5-4-3-2-1, Physiological Sigh, 4/6, Erdungsatmung, Box Breathing | gut |
+| grounding               | 5-4-3-2-1, 4/6, Erdungsatmung, Hand aufs Herz, Energie-Meditation | gut |
+| emotional_support       | Hand aufs Herz, Body Scan, Dankbarkeit, Emotion lokalisieren | gut |
+| gentle_activation       | Aktivierende Atmung, Energie-Meditation | gut |
+| focus                   | Atem zählen, Box Breathing, Aktivierende Atmung, Zielvisualisierung | gut |
 | positive_integration    | Kohärentes Atmen, Dankbarkeit, Zielvisualisierung | gut |
-| evening_regulation      | 4/6, Kohärentes Atmen, Body Scan | gut |
+| evening_regulation      | 4/6, Erdungsatmung, Atem zählen, Kohärentes Atmen, Body Scan | gut |
 
-**Empfehlung fürs Team:** Die akuten Lücken sind geschlossen. Sinnvolle nächste
-Ergänzungen wären 1–2 weitere **basic-Übungen** für `emotional_support` (sehr
-niedrigschwellig, ohne Tiefenpraxis-Hürde) und eine zweite, klar
-**wissenschaftlich** gestützte `positive_integration`-Übung. Akut **nötig** ist
-aber nichts mehr.
+**Empfehlung fürs Team:** Mit den vier neuen Übungen sind die Lücken
+geschlossen — jedes Ziel hat mehrere niedrigschwellige, sichere Optionen. Akut
+nötig ist nichts mehr; weitere Übungen erhöhen vor allem die Vielfalt.
+
 
 ---
 
@@ -370,15 +370,15 @@ Tageszeit „mittags“). Sie zeigen exakt, was die App ausgibt.
 
 | Stimmung | State Goal | Primär-Empfehlung | Alternativen |
 | --- | --- | --- | --- |
-| Friedlich | positive_integration | Dankbarkeits-Reflexion | Kohärentes Atmen, Zielvisualisierung |
-| Froh | positive_integration | Dankbarkeits-Reflexion | Kohärentes Atmen, Zielvisualisierung |
-| Zufrieden | positive_integration | Dankbarkeits-Reflexion | Kohärentes Atmen, Zielvisualisierung |
-| Energiegeladen | focus | Aktivierende Atmung | Zielvisualisierung, Dankbarkeits-Reflexion |
-| Neutral | focus | Aktivierende Atmung | Zielvisualisierung, Dankbarkeits-Reflexion |
-| Müde | gentle_activation | Energie-Meditation | Aktivierende Atmung, Zielvisualisierung |
-| Schwer | emotional_support | Dankbarkeits-Reflexion | Selbstmitgefühl, Body Scan |
-| Traurig | emotional_support | Dankbarkeits-Reflexion | Selbstmitgefühl, Body Scan |
-| Gestresst | stress_reduction | Physiological Sigh | 5-4-3-2-1, 4/6 Atmung |
+| Friedlich | positive_integration | Zielvisualisierung | Dankbarkeits-Reflexion, Kohärentes Atmen |
+| Froh | positive_integration | Dankbarkeits-Reflexion | Zielvisualisierung, Kohärentes Atmen |
+| Zufrieden | positive_integration | Zielvisualisierung | Dankbarkeits-Reflexion, Kohärentes Atmen |
+| Energiegeladen | focus | Atem zählen | Aktivierende Atmung, Zielvisualisierung |
+| Neutral | focus | Atem zählen | Aktivierende Atmung, Zielvisualisierung |
+| Müde | gentle_activation | Energie-Meditation | Aktivierende Atmung, Atem zählen |
+| Schwer | grounding | 5-4-3-2-1 | Hand aufs Herz, Energie-Meditation |
+| Traurig | emotional_support | Hand aufs Herz | Dankbarkeits-Reflexion, Selbstmitgefühl |
+| Gestresst | stress_reduction | 4/6 Atmung | Erdungsatmung, 5-4-3-2-1 |
 
 ```mermaid
 flowchart LR
@@ -387,16 +387,18 @@ flowchart LR
     subgraph Neu["Neutral · Energiegeladen"]
     end
     M["Müde"]
-    subgraph Low["Schwer · Traurig"]
-    end
+    Sw["Schwer"]
+    Tr["Traurig"]
     St["Gestresst"]
 
-    Pos --> PI["positive_integration"] --> Ex1["Dankbarkeits-Reflexion"]
-    Neu --> FO["focus"] --> Ex2["Aktivierende Atmung"]
+    Pos --> PI["positive_integration"] --> Ex1["Zielvis./Dankbarkeit"]
+    Neu --> FO["focus"] --> Ex2["Atem zählen"]
     M --> GA["gentle_activation"] --> Ex3["Energie-Meditation"]
-    Low --> ES["emotional_support"] --> Ex4["Dankbarkeits-Reflexion"]
-    St --> SR["stress_reduction"] --> Ex5["Physiological Sigh"]
+    Sw --> GR["grounding"] --> Ex4["5-4-3-2-1"]
+    Tr --> ES["emotional_support"] --> Ex5["Hand aufs Herz"]
+    St --> SR["stress_reduction"] --> Ex6["4/6 Atmung"]
 ```
+
 
 ### 10b. Zwei Stimmungen → State Goal
 
@@ -410,142 +412,50 @@ emotional_support, **SR** = stress_reduction.
 | **Froh**     | PI      | ·    | PI    | F      | PI     | F    | G      | F       | SR     |
 | **Zufr.**    | PI      | PI   | ·     | F      | PI     | F    | G      | F       | SR     |
 | **Energ.**   | F       | F    | F     | ·      | F      | F    | G      | F       | SR     |
-| **Neutr.**   | PI      | PI   | PI    | F      | ·      | F    | ES     | ES      | SR     |
-| **Müde**     | F       | F    | F     | F      | F      | ·    | ES     | ES      | SR     |
-| **Schwer**   | G       | G    | G     | G      | ES     | ES   | ·      | ES      | ES     |
-| **Traurig**  | F       | F    | F     | F      | ES     | ES   | ES     | ·       | ES     |
-| **Gestr.**   | SR      | SR   | SR    | SR     | SR     | SR   | ES     | ES      | ·      |
+| **Neutr.**   | PI      | PI   | PI    | F      | ·      | F    | G      | ES      | SR     |
+| **Müde**     | F       | F    | F     | F      | F      | ·    | G      | ES      | SR     |
+| **Schwer**   | G       | G    | G     | G      | G      | G    | ·      | G       | SR     |
+| **Traurig**  | F       | F    | F     | F      | ES     | ES   | G      | ·       | SR     |
+| **Gestr.**   | SR      | SR   | SR    | SR     | SR     | SR   | SR     | SR      | ·      |
+
 
 ### 10c. Zwei Stimmungen → Primär-Übung
 
-Kürzel: **PS** = Physiological Sigh, **DR** = Dankbarkeits-Reflexion,
+Kürzel: **AZ** = Atem zählen, **DR** = Dankbarkeits-Reflexion,
 **AA** = Aktivierende Atmung, **54** = 5-4-3-2-1, **ZV** = Zielvisualisierung,
-**SM** = Selbstmitgefühl.
+**HH** = Hand aufs Herz, **EM** = Energie-Meditation, **EA** = Erdungsatmung,
+**46** = 4/6 Atmung.
 
 |              | Friedl. | Froh | Zufr. | Energ. | Neutr. | Müde | Schwer | Traurig | Gestr. |
 | ------------ | :-----: | :--: | :---: | :----: | :----: | :--: | :----: | :-----: | :----: |
-| **Friedl.**  |   ·     | DR   | DR    | AA     | DR     | AA   | 54     | AA      | PS     |
-| **Froh**     | DR      | ·    | DR    | AA     | DR     | AA   | 54     | AA      | PS     |
-| **Zufr.**    | DR      | DR   | ·     | AA     | DR     | AA   | 54     | AA      | PS     |
-| **Energ.**   | AA      | AA   | AA    | ·      | AA     | AA   | 54     | ZV      | PS     |
-| **Neutr.**   | DR      | DR   | DR    | AA     | ·      | AA   | DR     | DR      | PS     |
-| **Müde**     | AA      | AA   | AA    | AA     | AA     | ·    | DR     | DR      | 54     |
-| **Schwer**   | 54      | 54   | 54    | 54     | DR     | DR   | ·      | DR      | SM     |
-| **Traurig**  | AA      | AA   | AA    | ZV     | DR     | DR   | DR     | ·       | SM     |
-| **Gestr.**   | PS      | PS   | PS    | PS     | PS     | 54   | SM     | SM      | ·      |
+| **Friedl.**  |   ·     | DR   | ZV    | AZ     | DR     | AA   | 54     | AZ      | EA     |
+| **Froh**     | DR      | ·    | DR    | AZ     | DR     | AZ   | 54     | AZ      | 46     |
+| **Zufr.**    | ZV      | DR   | ·     | AZ     | DR     | AA   | 54     | AZ      | EA     |
+| **Energ.**   | AZ      | AZ   | AZ    | ·      | AZ     | AZ   | 54     | AZ      | 46     |
+| **Neutr.**   | DR      | DR   | DR    | AZ     | ·      | AA   | 54     | HH      | EA     |
+| **Müde**     | AA      | AZ   | AA    | AZ     | AA     | ·    | 54     | HH      | 54     |
+| **Schwer**   | 54      | 54   | 54    | 54     | 54     | 54   | ·      | 54      | 54     |
+| **Traurig**  | AZ      | AZ   | AZ    | AZ     | HH     | HH   | 54     | ·       | 54     |
+| **Gestr.**   | EA      | 46   | EA    | 46     | EA     | 54   | 54     | 54      | ·      |
 
 > **So liest man die Matrix:** Zeile + Spalte = die beiden getippten
 > Stimmungen. Beispiel „Schwer“ × „Froh“ → State Goal **G** (grounding) →
 > Primär-Übung **54** (5-4-3-2-1) – genau das Rechenbeispiel aus Abschnitt 7.
 
 **Warum manche Felder dieselbe Übung zeigen, ist kein Fehler.** Wo der Zustand
-eindeutig ist, ist auch die beste Übung eindeutig: Akuter Stress (`SR`) führt
-fast immer zur stärksten Beruhigung (Physiological Sigh / 5-4-3-2-1), klar
-positive Zustände zur Dankbarkeit. Differenziert wird genau dort, wo das Profil
-gemischt ist (z. B. `Energiegeladen × Traurig` → Zielvisualisierung statt
-Aktivierende Atmung, weil hier die Schwere mitadressiert werden muss). Insgesamt
-verteilen sich die Paare jetzt auf **sechs** Übungen statt auf drei.
+eindeutig ist, ist auch die beste Übung eindeutig (z. B. sehr niedrige
+Stabilität → Erden mit 5-4-3-2-1). Differenziert wird dort, wo das Profil
+gemischt ist. Insgesamt verteilen sich die Paare auf **neun** verschiedene
+Primär-Übungen.
 
-### 10d. Drei Stimmungen → Primär-Übung (alle 84 Kombinationen)
+### 10d. Drei Stimmungen
 
-Auch Tripel folgen exakt derselben Mechanik (Profil → Triage → Scoring). Die
-vollständige Liste – direkt aus dem Algorithmus generiert:
+Tripel folgen exakt derselben Mechanik (Profil → Triage → Scoring) – es gibt
+**keine** Sonderfälle für größere Auswahlen, nur mehr Eingangssignale. Sobald
+**Gestresst** dabei ist, dominiert die Stressregulation; bei sehr niedriger
+Stabilität ohne akuten Stress die Erdung; bei Schwere + gedrückter Stimmung die
+emotionale Unterstützung. Die exakten Ausgaben lassen sich jederzeit über die
+Domain-Funktion `recommendExercises` reproduzieren (sie ist die einzige
+Quelle der Wahrheit) bzw. live im **Recommender-Tab** prüfen.
 
-<details>
-<summary><strong>Alle 84 Dreier-Kombinationen aufklappen</strong></summary>
-
-| Kombi | Goal | Primär |
-|---|---|---|
-| Friedlich + Froh + Zufrieden | positive_integration | Dankbarkeits-Reflexion |
-| Friedlich + Froh + Energiegeladen | focus | Aktivierende Atmung |
-| Friedlich + Froh + Neutral | positive_integration | Dankbarkeits-Reflexion |
-| Friedlich + Froh + Müde | focus | Aktivierende Atmung |
-| Friedlich + Froh + Schwer | grounding | 5-4-3-2-1 |
-| Friedlich + Froh + Traurig | focus | Aktivierende Atmung |
-| Friedlich + Froh + Gestresst | stress_reduction | Physiological Sigh |
-| Friedlich + Zufrieden + Energiegeladen | focus | Aktivierende Atmung |
-| Friedlich + Zufrieden + Neutral | positive_integration | Dankbarkeits-Reflexion |
-| Friedlich + Zufrieden + Müde | focus | Aktivierende Atmung |
-| Friedlich + Zufrieden + Schwer | grounding | 5-4-3-2-1 |
-| Friedlich + Zufrieden + Traurig | focus | Aktivierende Atmung |
-| Friedlich + Zufrieden + Gestresst | stress_reduction | 5-4-3-2-1 |
-| Friedlich + Energiegeladen + Neutral | focus | Aktivierende Atmung |
-| Friedlich + Energiegeladen + Müde | focus | Aktivierende Atmung |
-| Friedlich + Energiegeladen + Schwer | grounding | 5-4-3-2-1 |
-| Friedlich + Energiegeladen + Traurig | focus | Aktivierende Atmung |
-| Friedlich + Energiegeladen + Gestresst | stress_reduction | Physiological Sigh |
-| Friedlich + Neutral + Müde | focus | Aktivierende Atmung |
-| Friedlich + Neutral + Schwer | grounding | 5-4-3-2-1 |
-| Friedlich + Neutral + Traurig | focus | Aktivierende Atmung |
-| Friedlich + Neutral + Gestresst | stress_reduction | 5-4-3-2-1 |
-| Friedlich + Müde + Schwer | grounding | 5-4-3-2-1 |
-| Friedlich + Müde + Traurig | focus | Aktivierende Atmung |
-| Friedlich + Müde + Gestresst | stress_reduction | 5-4-3-2-1 |
-| Friedlich + Schwer + Traurig | grounding | 5-4-3-2-1 |
-| Friedlich + Schwer + Gestresst | stress_reduction | 5-4-3-2-1 |
-| Friedlich + Traurig + Gestresst | stress_reduction | 5-4-3-2-1 |
-| Froh + Zufrieden + Energiegeladen | focus | Aktivierende Atmung |
-| Froh + Zufrieden + Neutral | positive_integration | Dankbarkeits-Reflexion |
-| Froh + Zufrieden + Müde | focus | Aktivierende Atmung |
-| Froh + Zufrieden + Schwer | grounding | 5-4-3-2-1 |
-| Froh + Zufrieden + Traurig | focus | Aktivierende Atmung |
-| Froh + Zufrieden + Gestresst | stress_reduction | Physiological Sigh |
-| Froh + Energiegeladen + Neutral | focus | Aktivierende Atmung |
-| Froh + Energiegeladen + Müde | focus | Aktivierende Atmung |
-| Froh + Energiegeladen + Schwer | grounding | 5-4-3-2-1 |
-| Froh + Energiegeladen + Traurig | focus | Aktivierende Atmung |
-| Froh + Energiegeladen + Gestresst | stress_reduction | Physiological Sigh |
-| Froh + Neutral + Müde | focus | Aktivierende Atmung |
-| Froh + Neutral + Schwer | grounding | 5-4-3-2-1 |
-| Froh + Neutral + Traurig | focus | Aktivierende Atmung |
-| Froh + Neutral + Gestresst | stress_reduction | Physiological Sigh |
-| Froh + Müde + Schwer | grounding | 5-4-3-2-1 |
-| Froh + Müde + Traurig | focus | Aktivierende Atmung |
-| Froh + Müde + Gestresst | stress_reduction | 5-4-3-2-1 |
-| Froh + Schwer + Traurig | grounding | 5-4-3-2-1 |
-| Froh + Schwer + Gestresst | stress_reduction | 5-4-3-2-1 |
-| Froh + Traurig + Gestresst | stress_reduction | 5-4-3-2-1 |
-| Zufrieden + Energiegeladen + Neutral | focus | Aktivierende Atmung |
-| Zufrieden + Energiegeladen + Müde | focus | Aktivierende Atmung |
-| Zufrieden + Energiegeladen + Schwer | grounding | 5-4-3-2-1 |
-| Zufrieden + Energiegeladen + Traurig | focus | Aktivierende Atmung |
-| Zufrieden + Energiegeladen + Gestresst | stress_reduction | Physiological Sigh |
-| Zufrieden + Neutral + Müde | focus | Aktivierende Atmung |
-| Zufrieden + Neutral + Schwer | grounding | 5-4-3-2-1 |
-| Zufrieden + Neutral + Traurig | focus | Aktivierende Atmung |
-| Zufrieden + Neutral + Gestresst | stress_reduction | 5-4-3-2-1 |
-| Zufrieden + Müde + Schwer | grounding | 5-4-3-2-1 |
-| Zufrieden + Müde + Traurig | focus | Aktivierende Atmung |
-| Zufrieden + Müde + Gestresst | stress_reduction | 5-4-3-2-1 |
-| Zufrieden + Schwer + Traurig | grounding | 5-4-3-2-1 |
-| Zufrieden + Schwer + Gestresst | stress_reduction | 5-4-3-2-1 |
-| Zufrieden + Traurig + Gestresst | stress_reduction | 5-4-3-2-1 |
-| Energiegeladen + Neutral + Müde | focus | Aktivierende Atmung |
-| Energiegeladen + Neutral + Schwer | grounding | 5-4-3-2-1 |
-| Energiegeladen + Neutral + Traurig | focus | Zielvisualisierung |
-| Energiegeladen + Neutral + Gestresst | stress_reduction | Physiological Sigh |
-| Energiegeladen + Müde + Schwer | grounding | 5-4-3-2-1 |
-| Energiegeladen + Müde + Traurig | focus | Zielvisualisierung |
-| Energiegeladen + Müde + Gestresst | stress_reduction | 5-4-3-2-1 |
-| Energiegeladen + Schwer + Traurig | emotional_support | Dankbarkeits-Reflexion |
-| Energiegeladen + Schwer + Gestresst | emotional_support | Selbstmitgefühl |
-| Energiegeladen + Traurig + Gestresst | emotional_support | Selbstmitgefühl |
-| Neutral + Müde + Schwer | emotional_support | Dankbarkeits-Reflexion |
-| Neutral + Müde + Traurig | emotional_support | Dankbarkeits-Reflexion |
-| Neutral + Müde + Gestresst | stress_reduction | 5-4-3-2-1 |
-| Neutral + Schwer + Traurig | emotional_support | Dankbarkeits-Reflexion |
-| Neutral + Schwer + Gestresst | emotional_support | Selbstmitgefühl |
-| Neutral + Traurig + Gestresst | emotional_support | Selbstmitgefühl |
-| Müde + Schwer + Traurig | emotional_support | Dankbarkeits-Reflexion |
-| Müde + Schwer + Gestresst | emotional_support | Selbstmitgefühl |
-| Müde + Traurig + Gestresst | emotional_support | Selbstmitgefühl |
-| Schwer + Traurig + Gestresst | emotional_support | Selbstmitgefühl |
-
-</details>
-
-**Muster der Tripel:** Sobald **Gestresst** oder **Schwer/Traurig** im Spiel ist,
-übernimmt die Triage (Stress → Beruhigung, Schwere → emotionale Unterstützung).
-Rein positive bzw. neutrale Tripel landen bei Dankbarkeit oder Aktivierender
-Atmung. Es gibt also **keine** Sonderfälle für größere Auswahlen – dieselben
-Profil- und Scoring-Regeln greifen, nur mit mehr Eingangssignalen.
 

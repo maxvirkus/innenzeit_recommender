@@ -6,12 +6,14 @@ import type {
   UserSettings,
 } from '../domain/types';
 import { MOODS_BY_ID } from '../data/moods';
-import { DIMENSION_LABELS, STATE_GOAL_LABELS } from '../domain/explain';
-import { explainStateGoal } from '../domain/deriveStateGoal';
 import {
-  calculateDesiredChange,
-  isAcuteProfile,
-} from '../domain/scoring';
+  DIMENSION_LABELS,
+  MECHANISM_LABELS,
+  STATE_GOAL_LABELS,
+  explainScore,
+} from '../domain/explain';
+import { explainStateGoal } from '../domain/deriveStateGoal';
+import { desiredProfileFor, isAcuteProfile } from '../domain/scoring';
 
 interface Props {
   result: RecommendationResult;
@@ -49,10 +51,36 @@ function signed(n: number): string {
   return '0';
 }
 
+/** Plain-language direction word for moving from `from` toward `to`. */
+function directionWord(
+  dim: keyof MoodProfile,
+  from: number,
+  to: number,
+): string {
+  const delta = to - from;
+  if (Math.abs(delta) < 0.25) return 'ungefähr halten';
+  const up = delta > 0;
+  switch (dim) {
+    case 'valence':
+      return up ? 'Stimmung etwas heben' : 'Stimmung etwas senken';
+    case 'energy':
+      return up ? 'Energie sanft anheben' : 'Energie herunterfahren';
+    case 'stress':
+      return up ? 'etwas mehr Aktivierung' : 'Anspannung lösen';
+    case 'heaviness':
+      return up ? 'mehr Tiefe zulassen' : 'Schwere erleichtern';
+    case 'stability':
+      return up ? 'Stabilität stärken' : 'Stabilität lockern';
+  }
+}
+
 /**
  * Step-by-step, real-time breakdown of how the current recommendation was
  * computed. Reads only from the already-computed `result`, so it always
  * reflects exactly what the algorithm did — it never recomputes the ranking.
+ *
+ * Plain language only in the normal flow; raw numbers (profile values, score
+ * breakdown) live in an optional, collapsed "Technische Details" section.
  */
 export function CalculationWalkthrough({
   result,
@@ -72,13 +100,17 @@ export function CalculationWalkthrough({
     timeOfDay,
     userIntent,
   );
-  const desired = calculateDesiredChange(profile);
+  const desired = desiredProfileFor(stateGoal, profile);
   const acute = isAcuteProfile(profile);
 
   // The primary scored entry (first allowed-as-primary in the ranking).
   const primaryScored =
     scoredExercises.find((s) => s.exercise.id === result.primary?.id) ??
     scoredExercises[0];
+
+  const explanation = primaryScored
+    ? explainScore(primaryScored, stateGoal)
+    : null;
 
   const excluded = result.excludedExercises;
 
@@ -143,8 +175,9 @@ export function CalculationWalkthrough({
           <h3>Aus dem Profil wird ein Zustandsziel abgeleitet</h3>
         </div>
         <p className="calc-note">
-          Acht Regeln werden der Reihe nach geprüft (vom spezifischsten Bedarf
-          zum allgemeinsten). Die erste zutreffende Regel gewinnt.
+          Mehrere Regeln werden der Reihe nach geprüft — von „braucht zuerst
+          Halt“ bis hin zu allgemeineren Bedürfnissen. Die erste zutreffende
+          Regel gewinnt, damit Sicherheit vor Tiefe geht.
         </p>
         <div className="calc-callout">
           <div className="calc-callout-rule">
@@ -166,7 +199,8 @@ export function CalculationWalkthrough({
         <p className="calc-note">
           Bevor bewertet wird, fliegen riskante oder unpassende Übungen raus –
           unabhängig vom Zustandsziel. Was hier ausgeschlossen wird, kann gar
-          nicht erst empfohlen werden.
+          nicht erst empfohlen werden. Danach wird jede erlaubte Übung je nach
+          Zustand noch behutsamer dosiert.
         </p>
         {excluded.length === 0 ? (
           <div className="calc-callout calc-callout-ok">
@@ -187,54 +221,99 @@ export function CalculationWalkthrough({
         )}
       </div>
 
-      {/* Step 4 — desired change */}
+      {/* Step 4 — desired direction */}
       <div className="calc-step">
         <div className="calc-step-head">
           <span className="calc-step-num">4</span>
           <h3>Welche Veränderung wäre hilfreich?</h3>
         </div>
         <p className="calc-note">
-          Aus dem Profil wird ein <strong>Bedarfs-Vektor</strong> gebildet:
-          erhöhter Stress und Schwere sollen runter, niedrige Stabilität und
-          Stimmung hoch. Energie wird nur bei Bedarf angehoben oder gesenkt.
+          Zum Zustandsziel gehört ein angestrebter Ziel-Zustand. Die Übungen
+          werden danach bewertet, ob sie dein Profil <strong>näher</strong> an
+          diesen ausgeglichenen Zustand bringen.
         </p>
-        <div className="calc-vectors">
+        <ul className="calc-directions">
           {DIMENSIONS.map((dim) => (
-            <div
-              key={dim}
-              className={`calc-vec ${
-                desired[dim] === 0
-                  ? 'zero'
-                  : desired[dim] > 0
-                    ? 'up'
-                    : 'down'
-              }`}
-            >
-              <span className="calc-vec-label">{DIMENSION_LABELS[dim]}</span>
-              <span className="calc-vec-val">
-                {desired[dim] === 0 ? '—' : signed(desired[dim])}
+            <li key={dim}>
+              <span className="calc-dir-label">{DIMENSION_LABELS[dim]}</span>
+              <span className="calc-dir-word">
+                {directionWord(dim, profile[dim], desired[dim])}
               </span>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
 
-      {/* Step 5 — scoring the winner */}
-      {primaryScored && (
+      {/* Step 5 — why this practice (plain language) */}
+      {primaryScored && explanation && (
         <div className="calc-step">
           <div className="calc-step-head">
             <span className="calc-step-num">5</span>
-            <h3>
-              Bewertung der Empfehlung: {primaryScored.exercise.title}
-            </h3>
+            <h3>Warum {primaryScored.exercise.title}?</h3>
           </div>
-          <p className="calc-note">
-            Jede erlaubte Übung bekommt einen Score aus sechs Bausteinen. Der{' '}
-            <strong>ProfilFit</strong> ist das Skalarprodukt aus der Wirkung der
-            Übung und dem Bedarf aus Schritt 3 — so unterscheiden sich Übungen{' '}
-            <em>innerhalb</em> desselben Zustandsziels.
-          </p>
+          <p className="calc-note">{explanation.summary}</p>
+          <ul className="calc-reasons">
+            {explanation.factors.map((f, i) => (
+              <li
+                key={i}
+                className={f.positive ? 'reason-pos' : 'reason-neg'}
+              >
+                <span className="reason-mark">{f.positive ? '✓' : '·'}</span>
+                {f.label}
+              </li>
+            ))}
+          </ul>
+          {primaryScored.exercise.mechanisms.length > 0 && (
+            <p className="calc-note">
+              Angenommenes Wirkprinzip:{' '}
+              {primaryScored.exercise.mechanisms
+                .map((m) => MECHANISM_LABELS[m])
+                .join(', ')}
+              .
+            </p>
+          )}
+        </div>
+      )}
 
+      {/* Step 6 — ranking (names only, no scores in normal flow) */}
+      <div className="calc-step">
+        <div className="calc-step-head">
+          <span className="calc-step-num">6</span>
+          <h3>Reihenfolge der passendsten Übungen</h3>
+        </div>
+        <p className="calc-note">
+          Alle erlaubten Übungen werden verglichen. Die passendste wird zur
+          Hauptempfehlung, die nächsten zu Alternativen.
+          {result.hasCloseAlternative
+            ? ' Mehrere Übungen passen hier ähnlich gut.'
+            : ''}
+        </p>
+        <ol className="calc-ranking">
+          {scoredExercises.slice(0, 5).map((s) => (
+            <li
+              key={s.exercise.id}
+              className={s.exercise.id === result.primary?.id ? 'is-primary' : ''}
+            >
+              <span className="calc-rank-title">{s.exercise.title}</span>
+              {s.exercise.id === result.primary?.id && (
+                <span className="calc-rank-badge">Empfehlung</span>
+              )}
+            </li>
+          ))}
+        </ol>
+        {settings.longTermGoals.length === 0 && (
+          <p className="hint">
+            Tipp: Ohne Onboarding-Ziele und ohne gespeicherte Historie zählen vor
+            allem die Passung zum Zustand und die erwartete Wirkung. Setze Ziele
+            in den Einstellungen, um den Einfluss der Langzeitziele zu sehen.
+          </p>
+        )}
+      </div>
+
+      {/* Optional, collapsed: raw numbers for the curious / for QA */}
+      {primaryScored && (
+        <details className="calc-technical">
+          <summary>Technische Details (Score-Bausteine)</summary>
           <div className="calc-formula">
             <div className="calc-formula-mode">
               Gewichtungsmodus:{' '}
@@ -246,83 +325,52 @@ export function CalculationWalkthrough({
                 )
               </span>
             </div>
-            <table className="calc-table calc-score-table">
-              <thead>
-                <tr>
-                  <th>Baustein</th>
-                  <th>Wert</th>
-                  <th>Gewicht</th>
-                  <th>Beitrag</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(
-                  [
-                    ['StateFit', primaryScored.breakdown.stateFit, acute ? 0.45 : 0.35],
-                    ['ProfilFit', primaryScored.breakdown.profileFit, acute ? 0.5 : 0.35],
-                    ['LangzeitFit', primaryScored.breakdown.longTermGoalFit, acute ? 0.05 : 0.2],
-                    ['Persönl. Evidenz', primaryScored.breakdown.personalEvidence, acute ? 0.15 : 0.2],
-                    ['Wissenschaft', primaryScored.breakdown.sciencePrior, acute ? 0.1 : 0.15],
-                    ['Risiko', -primaryScored.breakdown.riskPenalty, acute ? 0.5 : 0.4],
-                  ] as [string, number, number][]
-                ).map(([label, value, weight]) => (
-                  <tr key={label}>
-                    <td>{label}</td>
-                    <td className="num">{signed(value)}</td>
-                    <td className="num">× {weight}</td>
-                    <td className="num calc-result">
-                      {signed(value * weight)}
+            <div className="table-scroll">
+              <table className="calc-table calc-score-table">
+                <thead>
+                  <tr>
+                    <th>Baustein</th>
+                    <th>Wert</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(
+                    [
+                      ['StateFit', primaryScored.breakdown.stateFit],
+                      ['ProfilFit', primaryScored.breakdown.profileFit],
+                      ['MechanismFit', primaryScored.breakdown.mechanismFit],
+                      ['LangzeitFit', primaryScored.breakdown.longTermGoalFit],
+                      [
+                        'Persönl. Evidenz',
+                        primaryScored.breakdown.personalEvidence,
+                      ],
+                      ['EvidenzFit', primaryScored.breakdown.evidenceFit],
+                      [
+                        'Sicherheits-Faktor',
+                        primaryScored.breakdown.safetyMultiplier,
+                      ],
+                      ['Risiko', -primaryScored.breakdown.riskPenalty],
+                    ] as [string, number][]
+                  ).map(([label, value]) => (
+                    <tr key={label}>
+                      <td>{label}</td>
+                      <td className="num">{signed(value)}</td>
+                    </tr>
+                  ))}
+                  <tr className="calc-total">
+                    <td>Gesamt-Score</td>
+                    <td className="num">
+                      <strong>
+                        {fmt(primaryScored.breakdown.finalScore)}
+                      </strong>
                     </td>
                   </tr>
-                ))}
-                <tr className="calc-total">
-                  <td colSpan={3}>Gesamt-Score</td>
-                  <td className="num">
-                    <strong>{fmt(primaryScored.breakdown.finalScore)}</strong>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        </details>
       )}
-
-      {/* Step 6 — ranking */}
-      <div className="calc-step">
-        <div className="calc-step-head">
-          <span className="calc-step-num">6</span>
-          <h3>Ranking entscheidet die Empfehlung</h3>
-        </div>
-        <p className="calc-note">
-          Alle erlaubten Übungen werden nach Score sortiert. Die höchste wird zur
-          Hauptempfehlung, die nächsten beiden mit positivem Score zu
-          Alternativen.
-        </p>
-        <ol className="calc-ranking">
-          {scoredExercises.slice(0, 5).map((s, i) => (
-            <li
-              key={s.exercise.id}
-              className={s.exercise.id === result.primary?.id ? 'is-primary' : ''}
-            >
-              <span className="calc-rank-num">{i + 1}</span>
-              <span className="calc-rank-title">{s.exercise.title}</span>
-              {s.exercise.id === result.primary?.id && (
-                <span className="calc-rank-badge">Empfehlung</span>
-              )}
-              <span className="calc-rank-score">
-                {fmt(s.breakdown.finalScore)}
-              </span>
-            </li>
-          ))}
-        </ol>
-        {settings.longTermGoals.length === 0 && (
-          <p className="hint">
-            Tipp: Ohne Onboarding-Ziele und ohne gespeicherte Historie zählen vor
-            allem StateFit und ProfilFit. Setze Ziele in den Einstellungen, um
-            den Einfluss von LangzeitFit zu sehen.
-          </p>
-        )}
-      </div>
     </details>
   );
 }

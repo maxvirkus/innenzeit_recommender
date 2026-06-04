@@ -15,13 +15,13 @@ npm run build    # Production-Build (dist/)
 
 ## Struktur
 
-- `src/data/` – Stamm-Daten (Moods, Übungen inkl. stateGoals, longTermGoals, sciencePrior, contraindicationRisk)
+- `src/data/` – Stamm-Daten (Moods, Übungen inkl. stateGoals, longTermGoals, family, mechanisms, evidenceProfile, contraindicationRisk; Quellen in `scientificSources.ts`)
 - `src/domain/` – reine Algorithmus-Logik (ohne React, separat testbar)
   - `deriveStateGoal.ts` – kurzfristiges Zustandsziel
-  - `scoring.ts` – StateFit, LongTermGoalFit, PersonalEvidence, FinalScore
+  - `scoring.ts` – StateFit, ProfileFit, MechanismFit, EvidenceFit, PersonalEvidence, SafetyMultiplier, FinalScore
   - `safetyRules.ts` – harte Filter (Rapid Breathing, Breathhold, L3-Gating)
   - `recommender.ts` – Pipeline inkl. Coherent-Breathing-Sonderregeln
-- `src/components/` – UI-Bausteine (inkl. Onboarding/Settings, Feedback, Debug)
+- `src/components/` – UI-Bausteine (inkl. Onboarding/Settings, Feedback, Live-Berechnung, Hintergrund)
 - `api/` – Vercel Serverless Functions (Login, Session, Feedback)
 - `src/__tests__/` – Vitest Unit Tests
 
@@ -29,15 +29,16 @@ npm run build    # Production-Build (dist/)
 
 - **LongTermGoals** (Onboarding/Settings): fließen über `calculateLongTermGoalFit` ein.
 - **StateGoal** (pro Session aus dem Profil abgeleitet): treibt `calculateStateFit`.
-- **PersonalEvidence**: aus lokaler History (localStorage), ab 3 relevanten Einträgen
-  wirksam; basiert auf der durchschnittlichen Bewertung (Rating) der Empfehlung.
+- **PersonalEvidence**: aus lokaler History (localStorage); Bayesianisch zu einem
+  neutralen Prior geglättet, überträgt teilweise auf verwandte Übungen (gleiche
+  Übung > Familie > Ziel).
 - Gewichtung verschiebt sich bei hohem Stress / niedriger Stabilität stärker auf den State-Fit.
 
 ## History-Simulation
 
 Im Feedback-Bereich kann das Team Fake-Feedback **lokal speichern**. Es landet in
-`localStorage` und beeinflusst sofort das Scoring (Spalte „PersonalEvidence“ im
-Debug-Panel). „Lokale Historie zurücksetzen“ leert sie wieder.
+`localStorage` und beeinflusst sofort das Scoring (PersonalEvidence).
+„Lokale Historie zurücksetzen“ leert sie wieder.
 
 ## Deployment auf Vercel
 
