@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { track } from '@vercel/analytics/react';
 import { MoodSelector } from './components/MoodSelector';
 import { TimeOfDaySelector } from './components/TimeOfDaySelector';
 import { RecommendationResult } from './components/RecommendationResult';
@@ -58,19 +59,19 @@ function AuthedApp() {
       <nav className="tab-bar" aria-label="Bereiche">
         <button
           className={tab === 'recommender' ? 'active' : ''}
-          onClick={() => setTab('recommender')}
+          onClick={() => { setTab('recommender'); track('tab_switch', { tab: 'recommender' }); }}
         >
           Recommender
         </button>
         <button
           className={tab === 'combinatorics' ? 'active' : ''}
-          onClick={() => setTab('combinatorics')}
+          onClick={() => { setTab('combinatorics'); track('tab_switch', { tab: 'combinatorics' }); }}
         >
           Kombinatorik
         </button>
         <button
           className={tab === 'background' ? 'active' : ''}
-          onClick={() => setTab('background')}
+          onClick={() => { setTab('background'); track('tab_switch', { tab: 'background' }); }}
         >
           Hintergrund
         </button>
@@ -132,7 +133,15 @@ function RecommenderApp() {
           />
 
           <h2>Zustände</h2>
-          <MoodSelector selected={selected} onChange={setSelected} />
+          <MoodSelector
+            selected={selected}
+            onChange={(next) => {
+              if (selected.length === 0 && next.length > 0) {
+                track('first_mood_selected', { mood: next[0] });
+              }
+              setSelected(next);
+            }}
+          />
 
           <h2>Tageszeit</h2>
           <TimeOfDaySelector value={timeOfDay} onChange={setTimeOfDay} />

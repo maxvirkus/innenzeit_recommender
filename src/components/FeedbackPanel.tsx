@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { track } from '@vercel/analytics/react';
 import type {
   Exercise,
   LongTermGoal,
@@ -59,7 +60,9 @@ export function FeedbackPanel({
   });
 
   const saveToProfile = () => {
-    onSaveToProfile(build());
+    const fb = build();
+    onSaveToProfile(fb);
+    track('feedback_saved_to_profile', { practice: fb.practiceId, rating: fb.rating });
     setProfileStatus(
       `Gespeichert. Dein Profil hat jetzt ${profileCount + 1} Bewertung(en) und beeinflusst die Reihenfolge der Empfehlungen.`,
     );
@@ -68,7 +71,9 @@ export function FeedbackPanel({
   const sendToTeam = async () => {
     setTeamStatus('Sende…');
     try {
-      await submitFeedback(build());
+      const fb = build();
+      await submitFeedback(fb);
+      track('feedback_sent_to_team', { practice: fb.practiceId, rating: fb.rating, clarity: fb.explanationClarity });
       setTeamStatus('Danke! Dein Feedback wurde ans Team gesendet.');
     } catch (e) {
       setTeamStatus(
