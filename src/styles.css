@@ -975,7 +975,8 @@ h2 {
 .calc-summary h2::before {
   content: '▸';
   color: var(--accent);
-  font-size: 14px;
+  font-size: 20px;
+  line-height: 1;
   transition: transform 0.15s;
 }
 
@@ -1033,7 +1034,8 @@ details.calc-step[open] .calc-step-preview {
 .calc-step-chevron {
   flex: none;
   color: var(--accent);
-  font-size: 13px;
+  font-size: 19px;
+  line-height: 1;
   transition: transform 0.15s;
 }
 
