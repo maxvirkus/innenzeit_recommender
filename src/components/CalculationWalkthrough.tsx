@@ -122,11 +122,19 @@ export function CalculationWalkthrough({
       </summary>
 
       {/* Step 1 — moods → profile */}
-      <div className="calc-step">
-        <div className="calc-step-head">
+      <details className="calc-step" open>
+        <summary className="calc-step-head">
           <span className="calc-step-num">1</span>
-          <h3>Zustände werden zu einem Profil verrechnet</h3>
-        </div>
+          <div className="calc-step-titles">
+            <h3>Zustände werden zu einem Profil verrechnet</h3>
+            <span className="calc-step-preview">
+              Aus 1–3 Zuständen entstehen fünf Profilwerte.
+            </span>
+          </div>
+          <span className="calc-step-chevron" aria-hidden>
+            ▸
+          </span>
+        </summary>
         <p className="calc-note">
           Jeder gewählte Zustand bringt fünf Werte mit (-2 bis +2). Stimmung und
           Energie werden <strong>gemittelt</strong>; Stress und Schwere nehmen
@@ -163,14 +171,22 @@ export function CalculationWalkthrough({
             </tbody>
           </table>
         </div>
-      </div>
+      </details>
 
       {/* Step 2 — profile → state goal */}
-      <div className="calc-step">
-        <div className="calc-step-head">
+      <details className="calc-step">
+        <summary className="calc-step-head">
           <span className="calc-step-num">2</span>
-          <h3>Aus dem Profil wird ein Zustandsziel abgeleitet</h3>
-        </div>
+          <div className="calc-step-titles">
+            <h3>Aus dem Profil wird ein Zustandsziel abgeleitet</h3>
+            <span className="calc-step-preview">
+              Die erste zutreffende Regel bestimmt das kurzfristige Ziel.
+            </span>
+          </div>
+          <span className="calc-step-chevron" aria-hidden>
+            ▸
+          </span>
+        </summary>
         <p className="calc-note">
           Mehrere Regeln werden der Reihe nach geprüft — von „braucht zuerst
           Halt“ bis hin zu allgemeineren Bedürfnissen. Die erste zutreffende
@@ -185,14 +201,22 @@ export function CalculationWalkthrough({
             → Zustandsziel: <strong>{STATE_GOAL_LABELS[stateGoal]}</strong>
           </div>
         </div>
-      </div>
+      </details>
 
       {/* Step 3 — safety filter */}
-      <div className="calc-step">
-        <div className="calc-step-head">
+      <details className="calc-step">
+        <summary className="calc-step-head">
           <span className="calc-step-num">3</span>
-          <h3>Sicherheitsfilter prüft jede Übung</h3>
-        </div>
+          <div className="calc-step-titles">
+            <h3>Sicherheitsfilter prüft jede Übung</h3>
+            <span className="calc-step-preview">
+              Riskante oder unpassende Übungen werden vorab ausgeschlossen.
+            </span>
+          </div>
+          <span className="calc-step-chevron" aria-hidden>
+            ▸
+          </span>
+        </summary>
         <p className="calc-note">
           Bevor bewertet wird, fliegen riskante oder unpassende Übungen raus –
           unabhängig vom Zustandsziel. Was hier ausgeschlossen wird, kann gar
@@ -216,14 +240,22 @@ export function CalculationWalkthrough({
             ))}
           </ul>
         )}
-      </div>
+      </details>
 
       {/* Step 4 — desired direction */}
-      <div className="calc-step">
-        <div className="calc-step-head">
+      <details className="calc-step">
+        <summary className="calc-step-head">
           <span className="calc-step-num">4</span>
-          <h3>Welche Veränderung wäre hilfreich?</h3>
-        </div>
+          <div className="calc-step-titles">
+            <h3>Welche Veränderung wäre hilfreich?</h3>
+            <span className="calc-step-preview">
+              In welche Richtung sollte dein Profil sich bewegen?
+            </span>
+          </div>
+          <span className="calc-step-chevron" aria-hidden>
+            ▸
+          </span>
+        </summary>
         <p className="calc-note">
           Zum Zustandsziel gehört ein angestrebter Ziel-Zustand. Die Übungen
           werden danach bewertet, ob sie dein Profil <strong>näher</strong> an
@@ -239,15 +271,23 @@ export function CalculationWalkthrough({
             </li>
           ))}
         </ul>
-      </div>
+      </details>
 
       {/* Step 5 — why this practice (plain language) */}
       {primaryScored && explanation && (
-        <div className="calc-step">
-          <div className="calc-step-head">
+        <details className="calc-step" open>
+          <summary className="calc-step-head">
             <span className="calc-step-num">5</span>
-            <h3>Warum {primaryScored.exercise.title}?</h3>
-          </div>
+            <div className="calc-step-titles">
+              <h3>Warum {primaryScored.exercise.title}?</h3>
+              <span className="calc-step-preview">
+                Die ausschlaggebenden Gründe für die Hauptempfehlung.
+              </span>
+            </div>
+            <span className="calc-step-chevron" aria-hidden>
+              ▸
+            </span>
+          </summary>
           <p className="calc-note">{explanation.summary}</p>
           <ul className="calc-reasons">
             {explanation.factors.map((f, i) => (
@@ -269,15 +309,23 @@ export function CalculationWalkthrough({
               .
             </p>
           )}
-        </div>
+        </details>
       )}
 
       {/* Step 6 — ranking (names only, no scores in normal flow) */}
-      <div className="calc-step">
-        <div className="calc-step-head">
+      <details className="calc-step">
+        <summary className="calc-step-head">
           <span className="calc-step-num">6</span>
-          <h3>Reihenfolge der passendsten Übungen</h3>
-        </div>
+          <div className="calc-step-titles">
+            <h3>Reihenfolge der passendsten Übungen</h3>
+            <span className="calc-step-preview">
+              Rangliste – die passendste wird zur Empfehlung.
+            </span>
+          </div>
+          <span className="calc-step-chevron" aria-hidden>
+            ▸
+          </span>
+        </summary>
         <p className="calc-note">
           Alle erlaubten Übungen werden verglichen. Die passendste wird zur
           Hauptempfehlung, die nächsten zu Alternativen.
@@ -305,7 +353,7 @@ export function CalculationWalkthrough({
             in den Einstellungen, um den Einfluss der Langzeitziele zu sehen.
           </p>
         )}
-      </div>
+      </details>
 
       {/* Optional, collapsed: raw numbers for the curious / for QA */}
       {primaryScored && (

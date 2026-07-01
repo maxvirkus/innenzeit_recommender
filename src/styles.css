@@ -985,11 +985,55 @@ h2 {
   margin-top: 16px;
 }
 
+/* When a step is a collapsible <details>, make the head a clickable summary. */
+details.calc-step > summary.calc-step-head {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+details.calc-step > summary.calc-step-head::-webkit-details-marker {
+  display: none;
+}
+
 .calc-step-head {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 8px;
+}
+
+.calc-step-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.calc-step-preview {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+/* Hide the one-line preview once the step is open (the full text shows). */
+details.calc-step[open] .calc-step-preview {
+  display: none;
+}
+
+.calc-step-chevron {
+  flex: none;
+  color: var(--accent);
+  font-size: 13px;
+  transition: transform 0.15s;
+}
+
+details.calc-step[open] .calc-step-chevron {
+  transform: rotate(90deg);
+}
+
+details.calc-step > summary.calc-step-head:hover .calc-step-chevron {
+  opacity: 0.7;
 }
 
 .calc-step-head h3 {
