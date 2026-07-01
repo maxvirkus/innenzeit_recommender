@@ -20,7 +20,6 @@ interface Props {
   selectedMoodIds: MoodId[];
   timeOfDay: TimeOfDay;
   settings: UserSettings;
-  userIntent: Parameters<typeof explainStateGoal>[3];
 }
 
 const DIMENSIONS: (keyof MoodProfile)[] = [
@@ -87,7 +86,6 @@ export function CalculationWalkthrough({
   selectedMoodIds,
   timeOfDay,
   settings,
-  userIntent,
 }: Props) {
   const { profile, stateGoal, scoredExercises } = result;
   const moods = selectedMoodIds
@@ -98,7 +96,6 @@ export function CalculationWalkthrough({
     profile,
     selectedMoodIds,
     timeOfDay,
-    userIntent,
   );
   const desired = desiredProfileFor(stateGoal, profile);
   const acute = isAcuteProfile(profile);
@@ -349,6 +346,14 @@ export function CalculationWalkthrough({
                         'Sicherheits-Faktor',
                         primaryScored.breakdown.safetyMultiplier,
                       ],
+                      ...(primaryScored.breakdown.intensityAdjustment !== 0
+                        ? ([
+                            [
+                              'Intensitäts-Präferenz',
+                              primaryScored.breakdown.intensityAdjustment,
+                            ],
+                          ] as [string, number][])
+                        : []),
                       ['Risiko', -primaryScored.breakdown.riskPenalty],
                     ] as [string, number][]
                   ).map(([label, value]) => (

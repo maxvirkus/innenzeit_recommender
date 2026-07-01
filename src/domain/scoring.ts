@@ -1,6 +1,7 @@
 import type {
   Exercise,
   EvidenceProfile,
+  Experience,
   Mechanism,
   MoodProfile,
   ScoreBreakdown,
@@ -9,6 +10,27 @@ import type {
   TimeOfDay,
   UserSettings,
 } from './types';
+
+/**
+ * Turns an experience tier into a 0..1 factor. Used to scale how strongly an
+ * intense/deep practice may be boosted and how much its risk/technique damping
+ * is relaxed: only experienced users who opt into intensity get the full
+ * effect.
+ */
+function experienceFactor(exp: Experience): number {
+  return exp === 'regular' ? 1 : exp === 'some' ? 0.5 : 0;
+}
+
+/**
+ * The experience tier that governs a given practice: breath-technique practices
+ * are gated by breathwork experience, everything else by meditation experience.
+ * This is what finally gives `meditationExperience` a real effect.
+ */
+function relevantExperience(exercise: Exercise, settings: UserSettings): Experience {
+  return exercise.breathTechnique
+    ? settings.breathworkExperience
+    : settings.meditationExperience;
+}
 
 /**
  * Goals that are clinically adjacent: a practice serving one is a *partial*
@@ -255,19 +277,31 @@ export function calculatePersonalEvidenceScore(
  * Soft safety damping. Hard safety rules still exclude practices entirely; this
  * multiplier only *dampens* risky-but-allowed practices depending on the
  * current state. Range 0–1.
+ *
+ * The acute-state damping (high stress, low stability, high heaviness) is always
+ * hard. The technique damping (rapid breathing / breath hold), however, is
+ * *softened* for experienced users who explicitly chose the `intense` intensity:
+ * those techniques only ever pass the hard filter in already non-acute states,
+ * so relaxing their soft penalty lets the intense practices these users asked
+ * for actually surface, without weakening any acute-state protection.
  */
 export function calculateSafetyMultiplier(
   profile: MoodProfile,
   exercise: Exercise,
-  _userSettings: UserSettings,
+  userSettings: UserSettings,
   timeOfDay: TimeOfDay,
 ): number {
+  const soften =
+    userSettings.practiceIntensity === 'intense'
+      ? experienceFactor(relevantExperience(exercise, userSettings))
+      : 0;
+
   let m = 1.0;
   if (profile.stress >= 1.2 && exercise.intensity >= 2) m -= 0.2;
   if (profile.stability <= -1.5 && exercise.depthCategory !== 'basic') m -= 0.3;
   if (profile.heaviness >= 1.5 && exercise.emotionalDepth >= 3) m -= 0.2;
-  if (exercise.breathTechnique === 'rapid_breathing') m -= 0.2;
-  if (exercise.breathTechnique === 'breath_hold') m -= 0.2;
+  if (exercise.breathTechnique === 'rapid_breathing') m -= 0.2 * (1 - soften);
+  if (exercise.breathTechnique === 'breath_hold') m -= 0.2 * (1 - soften);
   if (timeOfDay === 'evening' && exercise.targets.energy > 1) m -= 0.2;
   return Math.max(0, Math.min(1, m));
 }
@@ -345,7 +379,30 @@ export function calculateFinalScore(input: FinalScoreInput): ScoreBreakdown {
       personalEvidence * 0.5 +
       evidenceFit * 0.4;
 
-  const finalScore = baseScore * safetyMultiplier - riskPenalty * 0.4;
+  // Intensity preference. Experience/permission previously only *unlocked*
+  // intense practices; the scoring then still buried them. This term makes the
+  // chosen intensity an actual preference:
+  //  - `intense` (non-acute only): reward arousal with a *convex* bonus so the
+  //    genuinely most-intense practices are favoured (not just every mildly
+  //    activating one), scaled by the user's relevant experience, and strongly
+  //    relax the hard risk penalty — the UI now shows a safety disclaimer for
+  //    these practices. No boost in acute states.
+  //  - `gentle`: steer away from intense practices.
+  //  - `balanced`: neutral (unchanged behaviour).
+  const relExp = experienceFactor(relevantExperience(practice, userSettings));
+  let intensityAdjustment = 0;
+  let effectiveRiskPenalty = riskPenalty;
+  if (userSettings.practiceIntensity === 'intense' && !acute) {
+    intensityAdjustment = ((practice.intensity * practice.intensity) / 9) * 4 * relExp;
+    effectiveRiskPenalty = riskPenalty * (1 - 0.8 * relExp);
+  } else if (userSettings.practiceIntensity === 'gentle') {
+    intensityAdjustment = -practice.intensity * 0.5;
+  }
+
+  const finalScore =
+    baseScore * safetyMultiplier +
+    intensityAdjustment -
+    effectiveRiskPenalty * 0.4;
 
   return {
     stateFit,
@@ -356,6 +413,7 @@ export function calculateFinalScore(input: FinalScoreInput): ScoreBreakdown {
     evidenceFit,
     safetyMultiplier,
     riskPenalty,
+    intensityAdjustment,
     finalScore,
   };
 }

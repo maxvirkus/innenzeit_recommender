@@ -12,6 +12,8 @@ create table if not exists public.session_feedback (
   rating int,
   family text,
   explanation_clarity int,
+  instructions_quality int,
+  voice_delivery_quality int,
   comment text,
   better_fit text,
   client_timestamp timestamptz
@@ -22,6 +24,8 @@ create table if not exists public.session_feedback (
 alter table public.session_feedback
   add column if not exists family text,
   add column if not exists explanation_clarity int,
+  add column if not exists instructions_quality int,
+  add column if not exists voice_delivery_quality int,
   add column if not exists comment text,
   add column if not exists better_fit text;
 

@@ -3,7 +3,6 @@ import type {
   MoodProfile,
   StateGoal,
   TimeOfDay,
-  UserIntent,
 } from './types';
 
 /** Why a particular state goal was chosen — used for transparent UI. */
@@ -30,7 +29,6 @@ export function explainStateGoal(
   profile: MoodProfile,
   selectedMoodIds: MoodId[],
   timeOfDay: TimeOfDay,
-  _userIntent: UserIntent,
 ): StateGoalExplanation {
   // 1. Very low stability without acute stress → first give stability and an
   //    anchor. Safety-wise it is better to ground before working emotionally
@@ -116,7 +114,6 @@ export function deriveStateGoal(
   profile: MoodProfile,
   selectedMoodIds: MoodId[],
   timeOfDay: TimeOfDay,
-  userIntent: UserIntent,
 ): StateGoal {
-  return explainStateGoal(profile, selectedMoodIds, timeOfDay, userIntent).goal;
+  return explainStateGoal(profile, selectedMoodIds, timeOfDay).goal;
 }

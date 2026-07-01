@@ -101,6 +101,11 @@ const BUILDING_BLOCKS: {
     scale: '×0 … ×1',
   },
   {
+    name: 'Intensitäts-Präferenz',
+    what: 'Wählt die Person „intensiv & tief“ und hat passende Erfahrung, werden fordernde Übungen in ruhigen Zuständen gezielt hochgewichtet (und ihr Risiko-Abzug gelockert). Bei „sanft“ werden intensive Übungen leicht abgewertet. „Ausgewogen“ ist neutral. Im akuten Zustand greift der Bonus nie.',
+    scale: '-1,5 … +4',
+  },
+  {
     name: 'Risiko',
     what: 'Mögliche Kontraindikationen — wird zusätzlich moderat abgezogen.',
     scale: '0 … -3',
@@ -230,11 +235,15 @@ export function BackgroundPage() {
           Sicherheit wirkt auf zwei Ebenen. Zuerst ein <strong>harter
           Filter</strong>: riskante oder unpassende Übungen werden ganz
           ausgeschlossen (z. B. intensive Atemtechniken bei hohem Stress,
-          Tiefenpraxis ohne Freigabe bei instabilem Profil). Danach ein{' '}
+          Tiefenpraxis nur bei Intensität „intensiv &amp; tief“ und stabilem
+          Befinden). Danach ein{' '}
           <strong>weicher Sicherheits-Faktor</strong>, der erlaubte, aber für den
           aktuellen Zustand etwas fordernde Übungen behutsamer dosiert, statt sie
           komplett auszuschließen. Was hart ausgeschlossen wird, zeigt der
-          Recommender transparent an.
+          Recommender transparent an. Fordernde Übungen (schnelle Atmung,
+          Atempausen, hohe Intensität) bekommen zusätzlich einen{' '}
+          <strong>Sicherheitshinweis</strong> — im Ergebnis und noch einmal vor
+          dem Start.
         </p>
       </section>
 

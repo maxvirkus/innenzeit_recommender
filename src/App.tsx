@@ -18,7 +18,6 @@ import type {
   MoodId,
   SessionFeedback,
   TimeOfDay,
-  UserIntent,
   UserSettings,
 } from './domain/types';
 import { getDefaultTimeOfDay } from './timeOfDay';
@@ -93,9 +92,14 @@ function RecommenderApp() {
     'iz_settings',
     DEFAULT_USER_SETTINGS,
   );
-  const [userIntent, setUserIntent] = useState<UserIntent>('auto');
   const [history, setHistory] = useLocalStorage<SessionFeedback[]>(
     'iz_history',
+    [],
+  );
+  // Practice ids of recently completed sessions (newest first). Drives the
+  // tolerance-band rotation so near-tied exercises take turns.
+  const [recentlyServed, setRecentlyServed] = useLocalStorage<string[]>(
+    'iz_recent',
     [],
   );
 
@@ -105,10 +109,10 @@ function RecommenderApp() {
         selectedMoodIds: selected,
         timeOfDay,
         userSettings: settings,
-        userIntent,
         history,
+        recentlyServed,
       }),
-    [selected, timeOfDay, settings, userIntent, history],
+    [selected, timeOfDay, settings, history, recentlyServed],
   );
 
   const hasSelection = selected.length > 0;
@@ -125,12 +129,7 @@ function RecommenderApp() {
 
       <div className="workspace">
         <div className="input-column">
-          <SettingsPanel
-            settings={settings}
-            onChange={setSettings}
-            userIntent={userIntent}
-            onIntentChange={setUserIntent}
-          />
+          <SettingsPanel settings={settings} onChange={setSettings} />
 
           <h2>Zustände</h2>
           <MoodSelector
@@ -161,7 +160,6 @@ function RecommenderApp() {
               selectedMoodIds={selected}
               timeOfDay={timeOfDay}
               settings={settings}
-              userIntent={userIntent}
             />
           )}
 
@@ -173,7 +171,17 @@ function RecommenderApp() {
               stateGoal={result.stateGoal}
               longTermGoals={settings.longTermGoals}
               profileCount={history.length}
-              onSaveToProfile={(fb) => setHistory((prev) => [...prev, fb])}
+              onSaveToProfile={(fb) => {
+                setHistory((prev) => [...prev, fb]);
+                // Remember this practice as most-recently served so the
+                // rotation gives other near-tied exercises a turn next time.
+                setRecentlyServed((prev) =>
+                  [fb.practiceId, ...prev.filter((id) => id !== fb.practiceId)].slice(
+                    0,
+                    10,
+                  ),
+                );
+              }}
             />
           )}
 

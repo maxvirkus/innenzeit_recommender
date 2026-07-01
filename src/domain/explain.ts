@@ -138,6 +138,18 @@ export function explainScore(
     factors.push({ label: 'Erhöhtes Risiko – mit Vorsicht', positive: false });
   }
 
+  if (b.intensityAdjustment > 0.3) {
+    factors.push({
+      label: 'Passt zu deinem Wunsch nach intensiverer, fordernder Praxis',
+      positive: true,
+    });
+  } else if (b.intensityAdjustment < -0.3) {
+    factors.push({
+      label: 'Bewusst zurückgestuft, weil du sanftere Praxis bevorzugst',
+      positive: false,
+    });
+  }
+
   const summary =
     b.stateFit >= 5
       ? `Empfohlen, weil sie am besten zum Zustandsziel „${goalLabel}“ passt.`

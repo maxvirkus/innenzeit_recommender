@@ -665,6 +665,21 @@ h2 {
   font-weight: 500;
 }
 
+.caution-note {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e6cf9a;
+  background: #fbf3df;
+  color: #6b5320;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.caution-note span {
+  margin-right: 4px;
+}
+
 .factor-list {
   list-style: none;
   margin: 0;
@@ -1740,6 +1755,18 @@ h2 {
   background: #c79a2e;
 }
 
+.reach-band {
+  border-left-color: #4a7fb5;
+}
+.reach-band.reach-badge {
+  background: #e6eff8;
+  border-color: #b6cde6;
+  color: #2f5c86;
+}
+.reach-band .reach-badge-dot {
+  background: #4a7fb5;
+}
+
 .reach-out {
   border-left-color: #c2603a;
 }
@@ -1878,6 +1905,199 @@ h2 {
 @media (max-width: 360px) {
   .tab-bar button {
     font-size: 13px;
+  }
+}
+
+/* ============================================================
+   Exercise player (guided playback with karaoke-style highlight)
+   ============================================================ */
+.player-section {
+  margin-top: 20px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.player-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: none;
+  background: transparent;
+  padding: 6px 2px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.player-toggle:hover {
+  color: var(--accent);
+}
+
+.player-toggle-icon {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.player-collapse.collapsed {
+  display: none;
+}
+
+.player {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.player-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.player-btn {
+  border: 1.5px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.player-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.player-btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.player-btn.voice.on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.player-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.player-time {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.player-progress {
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.player-progress:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.player-progress-bar {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+/* Lyrics-style viewport: current line centered, others scroll past and fade. */
+.player-lyrics {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  /* Fade the top and bottom edges so lines appear/disappear softly. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 22%,
+    #000 78%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 22%,
+    #000 78%,
+    transparent 100%
+  );
+}
+
+.player-lyrics-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  /* Vertical padding so the first and last lines can reach the center. */
+  padding: 100px 22px;
+}
+
+.player-line {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--text-muted);
+  opacity: 0.35;
+  cursor: pointer;
+  transition: opacity 0.4s ease, color 0.4s ease, transform 0.4s ease;
+}
+
+.player-line:hover {
+  opacity: 0.7;
+}
+
+.player-line.past {
+  opacity: 0.4;
+}
+
+.player-line.current {
+  opacity: 1;
+  color: var(--text);
+}
+
+/* Word-level (karaoke) highlighting inside the current line. */
+.player-word {
+  color: var(--text-muted);
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.player-word.past {
+  color: var(--text);
+}
+
+.player-word.current {
+  color: var(--accent, var(--text));
+  font-weight: 700;
+}
+
+@media (max-width: 520px) {
+  .player-lyrics {
+    height: 200px;
+  }
+  .player-line {
+    font-size: 18px;
   }
 }
 

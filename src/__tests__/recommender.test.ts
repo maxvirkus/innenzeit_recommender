@@ -11,13 +11,12 @@ import {
   calculateSafetyMultiplier,
   calculateStateFit,
 } from '../domain/scoring';
-import { EXERCISES_BY_ID } from '../data/exercises';
+import { EXERCISES, EXERCISES_BY_ID } from '../data/exercises';
 import { MOODS } from '../data/moods';
 import type {
   MoodId,
   SessionFeedback,
   TimeOfDay,
-  UserIntent,
   UserSettings,
 } from '../domain/types';
 
@@ -26,7 +25,6 @@ function run(
   timeOfDay: TimeOfDay = 'midday',
   opts: {
     userSettings?: UserSettings;
-    userIntent?: UserIntent;
     history?: SessionFeedback[];
   } = {},
 ) {
@@ -60,7 +58,12 @@ describe('recommender – core scenarios', () => {
     const r = run(['tired']);
     expect(r.stateGoal).toBe('gentle_activation');
     // Power Breath must not be the answer for an exhausted beginner.
-    expect(['activating_breath', 'energy_meditation']).toContain(r.primary?.id);
+    expect([
+      'activating_breath',
+      'energy_meditation',
+      'morning_activation',
+      'walking_grounding',
+    ]).toContain(r.primary?.id);
     const excludedIds = r.excludedExercises.map((e) => e.exercise.id);
     expect(excludedIds).toContain('power_breath');
   });
@@ -97,6 +100,9 @@ describe('recommender – core scenarios', () => {
       'coherent_breathing',
       'goal_visualization',
       'gratitude_reflection',
+      'loving_kindness',
+      'savoring',
+      'mindful_ritual',
     ]).toContain(r.primary?.id);
   });
 
@@ -123,26 +129,25 @@ describe('recommender – core scenarios', () => {
 });
 
 describe('deriveStateGoal', () => {
-  const intent: UserIntent = 'auto';
   it('stressed -> stress_reduction', () => {
     const p = calculateMoodProfile(['stressed']);
-    expect(deriveStateGoal(p, ['stressed'], 'midday', intent)).toBe(
+    expect(deriveStateGoal(p, ['stressed'], 'midday')).toBe(
       'stress_reduction',
     );
   });
   it('energized -> focus', () => {
     const p = calculateMoodProfile(['energized']);
-    expect(deriveStateGoal(p, ['energized'], 'midday', intent)).toBe('focus');
+    expect(deriveStateGoal(p, ['energized'], 'midday')).toBe('focus');
   });
   it('heavy + sad -> grounding (stability-first)', () => {
     const p = calculateMoodProfile(['heavy', 'sad']);
-    expect(deriveStateGoal(p, ['heavy', 'sad'], 'midday', intent)).toBe(
+    expect(deriveStateGoal(p, ['heavy', 'sad'], 'midday')).toBe(
       'grounding',
     );
   });
   it('evening fallback -> evening_regulation', () => {
     const p = calculateMoodProfile(['neutral']);
-    expect(deriveStateGoal(p, ['neutral'], 'evening', intent)).toBe(
+    expect(deriveStateGoal(p, ['neutral'], 'evening')).toBe(
       'evening_regulation',
     );
   });
@@ -162,8 +167,7 @@ describe('scoring helpers', () => {
       longTermGoals: ['calm', 'stress_resilience', 'sleep'],
       breathworkExperience: 'some',
       meditationExperience: 'some',
-      allowDeepPractice: false,
-      allowCombinedSessions: false,
+      practiceIntensity: 'balanced',
     });
     expect(fit).toBe(4);
   });
@@ -234,8 +238,7 @@ describe('scoring helpers', () => {
       longTermGoals: [],
       breathworkExperience: 'some',
       meditationExperience: 'some',
-      allowDeepPractice: false,
-      allowCombinedSessions: false,
+      practiceIntensity: 'balanced',
     };
     const power = EXERCISES_BY_ID['power_breath'];
     const highStress = calculateMoodProfile(['stressed']);
@@ -252,8 +255,7 @@ describe('safety – new hard filters', () => {
         longTermGoals: [],
         breathworkExperience: 'none',
         meditationExperience: 'some',
-        allowDeepPractice: false,
-        allowCombinedSessions: false,
+        practiceIntensity: 'balanced',
       },
     });
     const excludedIds = r.excludedExercises.map((e) => e.exercise.id);
@@ -269,6 +271,9 @@ describe('coherent breathing placement', () => {
       'coherent_breathing',
       'goal_visualization',
       'gratitude_reflection',
+      'loving_kindness',
+      'savoring',
+      'mindful_ritual',
     ]).toContain(r.primary?.id);
   });
 });
@@ -307,5 +312,27 @@ describe('variety – the profile actually changes the winner', () => {
     }
     // The old goal-only model collapsed every pair onto 3 practices.
     expect(primaries.size).toBeGreaterThan(3);
+  });
+});
+
+describe('instructions – guided playback data', () => {
+  it('every exercise has non-empty instruction steps', () => {
+    for (const ex of EXERCISES) {
+      expect(ex.instructions.length).toBeGreaterThan(0);
+      for (const step of ex.instructions) {
+        expect(step.durationSeconds).toBeGreaterThan(0);
+        expect(step.text.trim().length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('instruction durations sum exactly to the practice length', () => {
+    for (const ex of EXERCISES) {
+      const total = ex.instructions.reduce(
+        (sum, step) => sum + step.durationSeconds,
+        0,
+      );
+      expect(total).toBe(ex.durationMinutes * 60);
+    }
   });
 });

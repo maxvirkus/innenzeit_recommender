@@ -1,6 +1,8 @@
 import { EXERCISES } from '../data/exercises';
 import { calculateMoodProfile } from './calculateMoodProfile';
+import { describeCaution } from './caution';
 import { deriveStateGoal } from './deriveStateGoal';
+import { calculateRecencyPenalty, TOLERANCE_BAND } from './recency';
 import { isAllowedBySafetyRules } from './safetyRules';
 import { calculateFinalScore } from './scoring';
 import type {
@@ -13,7 +15,6 @@ import type {
   SessionFeedback,
   StateGoal,
   TimeOfDay,
-  UserIntent,
   UserSettings,
 } from './types';
 
@@ -22,8 +23,7 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
   longTermGoals: [],
   breathworkExperience: 'none',
   meditationExperience: 'none',
-  allowDeepPractice: false,
-  allowCombinedSessions: false,
+  practiceIntensity: 'balanced',
 };
 
 /**
@@ -37,8 +37,13 @@ export interface RecommenderInput {
   selectedMoodIds: MoodId[];
   timeOfDay: TimeOfDay;
   userSettings?: UserSettings;
-  userIntent?: UserIntent;
   history?: SessionFeedback[];
+  /**
+   * Practice ids served in recent sessions, newest first. Drives the
+   * tolerance-band rotation so near-tied practices take turns instead of always
+   * surfacing the same one. Falls back to `history` when omitted/empty.
+   */
+  recentlyServed?: string[];
 }
 
 /**
@@ -78,17 +83,12 @@ export function recommendExercises(
     selectedMoodIds,
     timeOfDay,
     userSettings = FALLBACK_SETTINGS,
-    userIntent = 'auto',
     history = [],
+    recentlyServed = [],
   } = input;
 
   const profile = calculateMoodProfile(selectedMoodIds);
-  const stateGoal = deriveStateGoal(
-    profile,
-    selectedMoodIds,
-    timeOfDay,
-    userIntent,
-  );
+  const stateGoal = deriveStateGoal(profile, selectedMoodIds, timeOfDay);
 
   const allowed: ScoredExercise[] = [];
   const excluded: ExcludedExercise[] = [];
@@ -99,7 +99,6 @@ export function recommendExercises(
       selectedMoodIds,
       timeOfDay,
       userSettings,
-      userIntent,
     });
     if (!decision.allowed) {
       excluded.push({ exercise, reason: decision.reason ?? 'ausgeschlossen' });
@@ -118,7 +117,7 @@ export function recommendExercises(
 
   // Rank by score, then break ties deterministically: stronger evidence first,
   // then shorter (lower commitment), then stable id order.
-  allowed.sort((a, b) => {
+  const byRawScore = (a: ScoredExercise, b: ScoredExercise): number => {
     if (b.score !== a.score) return b.score - a.score;
     const ae = a.breakdown.evidenceFit;
     const be = b.breakdown.evidenceFit;
@@ -126,6 +125,35 @@ export function recommendExercises(
     if (a.exercise.durationMinutes !== b.exercise.durationMinutes)
       return a.exercise.durationMinutes - b.exercise.durationMinutes;
     return a.exercise.id.localeCompare(b.exercise.id);
+  };
+  allowed.sort(byRawScore);
+
+  // Runner-up gap is read from the raw scores, before any rotation reorders the
+  // near-ties.
+  const rawTop = allowed.length > 0 ? allowed[0].score : 0;
+  const rawSecond = allowed.length >= 2 ? allowed[1].score : undefined;
+
+  // Tolerance-band rotation: practices within TOLERANCE_BAND of the best are
+  // near-ties. A recency penalty (capped at TOLERANCE_BAND) is applied to those
+  // only, so the same near-tie practice is not always served. A clearly weaker
+  // (out-of-band) practice keeps its full, lower score and can never overtake,
+  // because every in-band practice stays >= rawTop - TOLERANCE_BAND even after
+  // the penalty. With no recency signal all penalties are 0 → ranking unchanged.
+  const effective = new Map<ScoredExercise, number>();
+  for (const s of allowed) {
+    const inBand = rawTop - s.score <= TOLERANCE_BAND;
+    effective.set(
+      s,
+      inBand
+        ? s.score -
+            calculateRecencyPenalty(s.exercise.id, recentlyServed, history)
+        : s.score,
+    );
+  }
+  allowed.sort((a, b) => {
+    const diff = (effective.get(b) ?? b.score) - (effective.get(a) ?? a.score);
+    if (diff !== 0) return diff;
+    return byRawScore(a, b);
   });
 
   // Pick the highest-scoring practice that is allowed to be primary.
@@ -144,7 +172,7 @@ export function recommendExercises(
 
   // Closeness of the runner-up — surfaced as "ähnlich passend" in the UI.
   const scoreGap =
-    allowed.length >= 2 ? allowed[0].score - allowed[1].score : Infinity;
+    rawSecond !== undefined ? rawTop - rawSecond : Infinity;
   const hasCloseAlternative =
     allowed.length >= 2 && scoreGap < 0.3 && alternatives.length > 0;
 
@@ -157,5 +185,6 @@ export function recommendExercises(
     scoredExercises: allowed,
     scoreGap,
     hasCloseAlternative,
+    caution: primary ? describeCaution(primary) : null,
   };
 }

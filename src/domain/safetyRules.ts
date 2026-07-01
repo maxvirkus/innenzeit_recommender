@@ -3,7 +3,6 @@ import type {
   MoodId,
   MoodProfile,
   TimeOfDay,
-  UserIntent,
   UserSettings,
 } from './types';
 
@@ -17,7 +16,6 @@ export interface SafetyContext {
   selectedMoodIds: MoodId[];
   timeOfDay: TimeOfDay;
   userSettings: UserSettings;
-  userIntent: UserIntent;
 }
 
 /**
@@ -28,7 +26,7 @@ export function isAllowedBySafetyRules(
   exercise: Exercise,
   ctx: SafetyContext,
 ): SafetyDecision {
-  const { profile, selectedMoodIds, timeOfDay, userSettings, userIntent } = ctx;
+  const { profile, selectedMoodIds, timeOfDay, userSettings } = ctx;
 
   const highStress = profile.stress >= 1.2 || selectedMoodIds.includes('stressed');
   const lowStability = profile.stability <= -1.5;
@@ -122,20 +120,19 @@ export function isAllowedBySafetyRules(
     return { allowed: false, reason: 'Abend: Power Breath ausgeschlossen' };
 
   // --- Deep-practice gating ---
-  // self_compassion is intentionally exempt so emotional processing stays
-  // available even at low stability.
+  // Deep practices are only unlocked when the user explicitly chose the
+  // `intense` intensity *and* the current profile is stable. self_compassion is
+  // intentionally exempt so emotional processing stays available even at low
+  // stability.
   if (exercise.depthCategory === 'deep' && exercise.id !== 'self_compassion') {
     const stableProfile =
       profile.stability > -1 && profile.stress < 1.2 && profile.heaviness < 1.5;
     const allowed =
-      userSettings.allowDeepPractice &&
-      userSettings.allowCombinedSessions &&
-      userIntent === 'go_deeper' &&
-      stableProfile;
+      userSettings.practiceIntensity === 'intense' && stableProfile;
     if (!allowed)
       return {
         allowed: false,
-        reason: 'Tiefenpraxis ohne Freigabe / stabiles Profil ausgeschlossen',
+        reason: 'Tiefenpraxis nur bei Intensität „intensiv“ und stabilem Befinden',
       };
   }
 

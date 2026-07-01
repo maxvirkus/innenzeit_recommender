@@ -2,14 +2,15 @@ import { useMemo, useState } from 'react';
 import { MOODS, MOODS_BY_ID } from '../data/moods';
 import { EXERCISES } from '../data/exercises';
 import { recommendExercises } from '../domain/recommender';
+import { TOLERANCE_BAND } from '../domain/recency';
 import { STATE_GOAL_LABELS } from '../domain/explain';
 import type {
   Experience,
   ExerciseId,
   LongTermGoal,
   MoodId,
+  PracticeIntensity,
   TimeOfDay,
-  UserIntent,
   UserSettings,
 } from '../domain/types';
 
@@ -25,6 +26,12 @@ const EXPERIENCES: { id: Experience; label: string }[] = [
   { id: 'none', label: 'keine' },
   { id: 'some', label: 'etwas' },
   { id: 'regular', label: 'regelmäßig' },
+];
+
+const INTENSITIES: { id: PracticeIntensity; label: string }[] = [
+  { id: 'gentle', label: 'sanft' },
+  { id: 'balanced', label: 'ausgewogen' },
+  { id: 'intense', label: 'intensiv & tief' },
 ];
 
 const LONG_TERM_GOALS: { id: LongTermGoal; label: string }[] = [
@@ -65,7 +72,6 @@ interface Context {
   selectedMoodIds: MoodId[];
   timeOfDay: TimeOfDay;
   userSettings: UserSettings;
-  userIntent: UserIntent;
 }
 
 interface Reachability {
@@ -73,6 +79,11 @@ interface Reachability {
   everPrimary: Set<ExerciseId>;
   /** Exercise ids that appeared as an alternative at least once. */
   everAlternative: Set<ExerciseId>;
+  /**
+   * Exercise ids that landed within the tolerance band of the top score at
+   * least once — reachable via the rotation even if never top by raw score.
+   */
+  everInBand: Set<ExerciseId>;
   /** Exercise ids that passed the safety filter at least once. */
   everAllowed: Set<ExerciseId>;
   /** Best (lowest) rank an exercise ever reached among the allowed list. */
@@ -86,6 +97,7 @@ interface Reachability {
 function sweep(contexts: Context[]): Reachability {
   const everPrimary = new Set<ExerciseId>();
   const everAlternative = new Set<ExerciseId>();
+  const everInBand = new Set<ExerciseId>();
   const everAllowed = new Set<ExerciseId>();
   const bestRank = new Map<ExerciseId, number>();
   const primaryCount = new Map<ExerciseId, number>();
@@ -97,8 +109,10 @@ function sweep(contexts: Context[]): Reachability {
       primaryCount.set(r.primary.id, (primaryCount.get(r.primary.id) ?? 0) + 1);
     }
     for (const alt of r.alternatives) everAlternative.add(alt.id);
+    const topScore = r.scoredExercises[0]?.score ?? 0;
     r.scoredExercises.forEach((s, i) => {
       everAllowed.add(s.exercise.id);
+      if (topScore - s.score <= TOLERANCE_BAND) everInBand.add(s.exercise.id);
       const prev = bestRank.get(s.exercise.id) ?? Infinity;
       if (i + 1 < prev) bestRank.set(s.exercise.id, i + 1);
     });
@@ -107,6 +121,7 @@ function sweep(contexts: Context[]): Reachability {
   return {
     everPrimary,
     everAlternative,
+    everInBand,
     everAllowed,
     bestRank,
     primaryCount,
@@ -114,11 +129,12 @@ function sweep(contexts: Context[]): Reachability {
   };
 }
 
-type Status = 'primary' | 'alternative' | 'outranked' | 'excluded';
+type Status = 'primary' | 'alternative' | 'band' | 'outranked' | 'excluded';
 
 function statusOf(id: ExerciseId, r: Reachability): Status {
   if (r.everPrimary.has(id)) return 'primary';
   if (r.everAlternative.has(id)) return 'alternative';
+  if (r.everInBand.has(id)) return 'band';
   if (r.everAllowed.has(id)) return 'outranked';
   return 'excluded';
 }
@@ -136,6 +152,11 @@ const STATUS_META: Record<
     label: 'Nur als Alternative',
     hint: 'Erscheint höchstens als Alternative, nie als Haupt­empfehlung.',
     cls: 'reach-alt',
+  },
+  band: {
+    label: 'Im Toleranzband erreichbar',
+    hint: 'Liegt in mindestens einer Konstellation nah genug an der Spitze, um durch die Rotation empfohlen zu werden.',
+    cls: 'reach-band',
   },
   outranked: {
     label: 'Unerreichbar – immer überpunktet',
@@ -172,9 +193,8 @@ function MoodTags({ ids }: { ids: MoodId[] }) {
 export function CombinatoricsExplorer() {
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('midday');
   const [experience, setExperience] = useState<Experience>('none');
-  const [allowDeepPractice, setAllowDeepPractice] = useState(false);
-  const [allowCombinedSessions, setAllowCombinedSessions] = useState(false);
-  const [userIntent, setUserIntent] = useState<UserIntent>('auto');
+  const [practiceIntensity, setPracticeIntensity] =
+    useState<PracticeIntensity>('balanced');
   const [longTermGoals, setLongTermGoals] = useState<LongTermGoal[]>([]);
   const [comboSize, setComboSize] = useState<1 | 2 | 3>(2);
   const [globalReach, setGlobalReach] = useState<Reachability | null>(null);
@@ -184,10 +204,9 @@ export function CombinatoricsExplorer() {
       longTermGoals,
       breathworkExperience: experience,
       meditationExperience: experience,
-      allowDeepPractice,
-      allowCombinedSessions,
+      practiceIntensity,
     }),
-    [longTermGoals, experience, allowDeepPractice, allowCombinedSessions],
+    [longTermGoals, experience, practiceIntensity],
   );
 
   // Mapping table for the currently selected context + combo size.
@@ -197,7 +216,6 @@ export function CombinatoricsExplorer() {
         selectedMoodIds: combo,
         timeOfDay,
         userSettings: settings,
-        userIntent,
         history: [],
       });
       return {
@@ -208,7 +226,7 @@ export function CombinatoricsExplorer() {
         excluded: r.excludedExercises.length,
       };
     });
-  }, [comboSize, timeOfDay, settings, userIntent]);
+  }, [comboSize, timeOfDay, settings]);
 
   // Reachability under the current settings, swept over all combos × all times.
   const contextReach = useMemo(() => {
@@ -217,45 +235,23 @@ export function CombinatoricsExplorer() {
         selectedMoodIds: combo,
         timeOfDay: t.id,
         userSettings: settings,
-        userIntent,
       })),
     );
     return sweep(contexts);
-  }, [settings, userIntent]);
+  }, [settings]);
 
   const runGlobalAnalysis = () => {
     // Curated profiles keep the sweep bounded while still covering the
-    // safety-relevant extremes (experience, deep-practice gating, intent).
+    // safety-relevant extremes (experience × chosen intensity).
     const profiles: {
       experience: Experience;
-      allowDeepPractice: boolean;
-      allowCombinedSessions: boolean;
-      userIntent: UserIntent;
+      practiceIntensity: PracticeIntensity;
     }[] = [
-      {
-        experience: 'none',
-        allowDeepPractice: false,
-        allowCombinedSessions: false,
-        userIntent: 'auto',
-      },
-      {
-        experience: 'regular',
-        allowDeepPractice: false,
-        allowCombinedSessions: false,
-        userIntent: 'auto',
-      },
-      {
-        experience: 'some',
-        allowDeepPractice: true,
-        allowCombinedSessions: true,
-        userIntent: 'go_deeper',
-      },
-      {
-        experience: 'regular',
-        allowDeepPractice: true,
-        allowCombinedSessions: true,
-        userIntent: 'go_deeper',
-      },
+      { experience: 'none', practiceIntensity: 'gentle' },
+      { experience: 'none', practiceIntensity: 'balanced' },
+      { experience: 'regular', practiceIntensity: 'balanced' },
+      { experience: 'some', practiceIntensity: 'intense' },
+      { experience: 'regular', practiceIntensity: 'intense' },
     ];
     // Long-term goals: empty plus each single goal, so goal-driven surfacing is
     // captured without iterating all 256 subsets.
@@ -272,13 +268,11 @@ export function CombinatoricsExplorer() {
             contexts.push({
               selectedMoodIds: combo,
               timeOfDay: t.id,
-              userIntent: p.userIntent,
               userSettings: {
                 longTermGoals: goals,
                 breathworkExperience: p.experience,
                 meditationExperience: p.experience,
-                allowDeepPractice: p.allowDeepPractice,
-                allowCombinedSessions: p.allowCombinedSessions,
+                practiceIntensity: p.practiceIntensity,
               },
             });
           }
@@ -345,40 +339,20 @@ export function CombinatoricsExplorer() {
         </div>
 
         <div className="control-block">
-          <span className="control-label">Absicht</span>
+          <span className="control-label">Praxis-Intensität</span>
           <div className="chip-row">
-            <button
-              className={`chip${userIntent === 'auto' ? ' selected' : ''}`}
-              onClick={() => setUserIntent('auto')}
-            >
-              automatisch
-            </button>
-            <button
-              className={`chip${userIntent === 'go_deeper' ? ' selected' : ''}`}
-              onClick={() => setUserIntent('go_deeper')}
-            >
-              bewusst tiefer
-            </button>
+            {INTENSITIES.map((opt) => (
+              <button
+                key={opt.id}
+                className={`chip${
+                  practiceIntensity === opt.id ? ' selected' : ''
+                }`}
+                onClick={() => setPracticeIntensity(opt.id)}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
-        </div>
-
-        <div className="toggle-row">
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={allowDeepPractice}
-              onChange={(e) => setAllowDeepPractice(e.target.checked)}
-            />
-            Tiefe Praxis erlauben
-          </label>
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={allowCombinedSessions}
-              onChange={(e) => setAllowCombinedSessions(e.target.checked)}
-            />
-            Kombinierte Sessions erlauben
-          </label>
         </div>
 
         <div className="control-block">
@@ -411,8 +385,9 @@ export function CombinatoricsExplorer() {
         </h2>
 
         <div className="reach-legend">
-          {(['primary', 'alternative', 'outranked', 'excluded'] as Status[]).map(
-            (s) => (
+          {(
+            ['primary', 'alternative', 'band', 'outranked', 'excluded'] as Status[]
+          ).map((s) => (
               <span key={s} className={`reach-badge ${STATUS_META[s].cls}`}>
                 {STATUS_META[s].label}
               </span>
@@ -457,8 +432,8 @@ export function CombinatoricsExplorer() {
           <p className="hint reach-note">
             <strong>Bei diesen Einstellungen unerreichbar:</strong>{' '}
             {unreachableContext.map((e) => e.title).join(', ')}. Das kann an den
-            Einstellungen liegen (z. B. tiefe Praxis nicht erlaubt) – probiere
-            andere Rahmenbedingungen oder die globale Prüfung unten.
+            Einstellungen liegen (z. B. Intensität nicht auf „intensiv & tief“) –
+            probiere andere Rahmenbedingungen oder die globale Prüfung unten.
           </p>
         ) : (
           <p className="hint reach-note">

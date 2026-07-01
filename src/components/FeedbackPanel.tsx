@@ -35,6 +35,10 @@ export function FeedbackPanel({
 }: Props) {
   const [rating, setRating] = useState<Rating>(4);
   const [clarity, setClarity] = useState<Rating>(4);
+  // 0 = not rated (“–”): the guided playback is optional, so these stay empty
+  // unless the user explicitly rates them.
+  const [instructions, setInstructions] = useState<0 | Rating>(0);
+  const [voiceDelivery, setVoiceDelivery] = useState<0 | Rating>(0);
   const [comment, setComment] = useState('');
   const [betterFit, setBetterFit] = useState('');
   const [profileStatus, setProfileStatus] = useState('');
@@ -54,6 +58,8 @@ export function FeedbackPanel({
     longTermGoals,
     rating,
     explanationClarity: clarity,
+    instructionsQuality: instructions || undefined,
+    voiceDeliveryQuality: voiceDelivery || undefined,
     comment: comment.trim() || undefined,
     betterFit: betterFit.trim() || undefined,
     timestamp: new Date().toISOString(),
@@ -145,6 +151,53 @@ export function FeedbackPanel({
           value={clarity}
           onChange={(e) => setClarity(Number(e.target.value) as Rating)}
         >
+          {[1, 2, 3, 4, 5].map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Rating about the guided playback (only if the user listened) */}
+      <div className="fb-field">
+        <span className="fb-eyebrow">Anleitung</span>
+        <label className="field-label" htmlFor="instructions">
+          Wie gut haben die <em>Anweisungen</em> gepasst? (1 = gar nicht, 5 =
+          sehr gut – leer lassen, falls nicht angehört)
+        </label>
+        <select
+          id="instructions"
+          className="rating-select"
+          value={instructions}
+          onChange={(e) =>
+            setInstructions(Number(e.target.value) as 0 | Rating)
+          }
+        >
+          <option value={0}>–</option>
+          {[1, 2, 3, 4, 5].map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="fb-field">
+        <span className="fb-eyebrow">Stimme</span>
+        <label className="field-label" htmlFor="voiceDelivery">
+          Haben <em>Betonung &amp; Pausen</em> der Stimme gepasst? (1 = gar
+          nicht, 5 = sehr gut – leer lassen, falls nicht angehört)
+        </label>
+        <select
+          id="voiceDelivery"
+          className="rating-select"
+          value={voiceDelivery}
+          onChange={(e) =>
+            setVoiceDelivery(Number(e.target.value) as 0 | Rating)
+          }
+        >
+          <option value={0}>–</option>
           {[1, 2, 3, 4, 5].map((n) => (
             <option key={n} value={n}>
               {n}

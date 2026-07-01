@@ -1,15 +1,13 @@
 import type {
   Experience,
   LongTermGoal,
-  UserIntent,
+  PracticeIntensity,
   UserSettings,
 } from '../domain/types';
 
 interface Props {
   settings: UserSettings;
   onChange: (next: UserSettings) => void;
-  userIntent: UserIntent;
-  onIntentChange: (next: UserIntent) => void;
 }
 
 const LONG_TERM_GOALS: { id: LongTermGoal; label: string }[] = [
@@ -29,14 +27,27 @@ const EXPERIENCES: { id: Experience; label: string }[] = [
   { id: 'regular', label: 'Regelmäßig' },
 ];
 
+const INTENSITIES: { id: PracticeIntensity; label: string; hint: string }[] = [
+  {
+    id: 'gentle',
+    label: 'Sanft',
+    hint: 'Ruhige, sanfte Übungen. Intensive Techniken werden zurückgestellt.',
+  },
+  {
+    id: 'balanced',
+    label: 'Ausgewogen',
+    hint: 'Ausgewogene Mischung – die Empfehlung richtet sich allein nach deinem Zustand.',
+  },
+  {
+    id: 'intense',
+    label: 'Intensiv & tief',
+    hint: 'Bevorzugt fordernde und tiefere Übungen – passend zu deiner Erfahrung und nur bei stabilem Befinden. Sicherheitsfilter bleiben aktiv.',
+  },
+];
+
 const MAX_GOALS = 3;
 
-export function SettingsPanel({
-  settings,
-  onChange,
-  userIntent,
-  onIntentChange,
-}: Props) {
+export function SettingsPanel({ settings, onChange }: Props) {
   const toggleGoal = (id: LongTermGoal) => {
     const selected = settings.longTermGoals.includes(id);
     if (selected) {
@@ -115,51 +126,27 @@ export function SettingsPanel({
         ))}
       </div>
 
-      <label className="field-label">Tiefe Praxis (L3) freischalten</label>
-      <p className="hint">
-        Tiefe Praxis (L3) kombiniert Atem und Meditation und kann stark
-        veränderte Zustände auslösen. Sie wird nur empfohlen, wenn alle drei
-        Schalter aktiv sind und dein Befinden stabil ist – nie automatisch bei
-        Stress oder Überwältigung.
-      </p>
-      <div className="toggle-row">
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={settings.allowDeepPractice}
-            onChange={(ev) =>
-              onChange({ ...settings, allowDeepPractice: ev.target.checked })
+      <label className="field-label">Praxis-Intensität</label>
+      <div className="segmented">
+        {INTENSITIES.map((opt) => (
+          <button
+            key={opt.id}
+            type="button"
+            className={settings.practiceIntensity === opt.id ? 'active' : ''}
+            onClick={() =>
+              onChange({ ...settings, practiceIntensity: opt.id })
             }
-          />
-          Tiefe Praxis erlauben
-        </label>
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={settings.allowCombinedSessions}
-            onChange={(ev) =>
-              onChange({
-                ...settings,
-                allowCombinedSessions: ev.target.checked,
-              })
-            }
-          />
-          Kombinierte Sessions erlauben
-        </label>
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={userIntent === 'go_deeper'}
-            onChange={(ev) =>
-              onIntentChange(ev.target.checked ? 'go_deeper' : 'auto')
-            }
-          />
-          Intention „tiefer gehen“
-        </label>
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
       <p className="hint">
-        <strong>Kombinierte Sessions</strong> = Atem- und Meditationsübungen in
-        einer längeren Sitzung verbinden (die Grundlage für Tiefe Praxis / L3).
+        {
+          INTENSITIES.find((o) => o.id === settings.practiceIntensity)?.hint
+        }{' '}
+        Wie stark intensivere Übungen bevorzugt werden, hängt zusätzlich von
+        deiner angegebenen Erfahrung ab.
       </p>
     </details>
   );
