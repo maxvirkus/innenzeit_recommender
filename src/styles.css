@@ -121,6 +121,15 @@ h2 {
   margin: 0;
 }
 
+/* "Alternativen" heading: match the vertical rhythm of the other section
+   headings (which use ~32px top spacing) instead of the tighter 16px gap. */
+.reco > h2 + .alt-grid {
+  margin-top: 12px;
+}
+.reco > * + h2 {
+  margin-top: 32px;
+}
+
 /* Mood grid */
 .mood-grid {
   display: grid;
