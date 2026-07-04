@@ -4,7 +4,7 @@ export const MOODS: Mood[] = [
   {
     id: 'peaceful',
     label: 'Friedlich',
-    emoji: '❤️',
+    emoji: '🍃',
     profile: { valence: 2, energy: 0, stress: -2, heaviness: -1, stability: 2 },
   },
   {
@@ -34,7 +34,7 @@ export const MOODS: Mood[] = [
   {
     id: 'tired',
     label: 'Müde',
-    emoji: '🔋',
+    emoji: '🌙',
     profile: { valence: -1, energy: -2, stress: 0, heaviness: 1, stability: -1 },
   },
   {
@@ -46,13 +46,13 @@ export const MOODS: Mood[] = [
   {
     id: 'sad',
     label: 'Traurig',
-    emoji: '🌧',
+    emoji: '🌧️',
     profile: { valence: -2, energy: -1, stress: 0, heaviness: 2, stability: -1 },
   },
   {
     id: 'stressed',
     label: 'Gestresst',
-    emoji: '😞',
+    emoji: '🌪️',
     profile: { valence: -2, energy: 1, stress: 2, heaviness: 1, stability: -2 },
   },
 ];
