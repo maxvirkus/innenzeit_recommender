@@ -38,3 +38,31 @@ alter table public.session_feedback enable row level security;
 grant all on public.session_feedback to service_role;
 -- Allow the sequence (for id generation) to be used by service_role.
 grant usage, select on all sequences in schema public to service_role;
+
+-- Chat-Guide: rohe Transkripte (Audit, Eval, Prompt-Iteration) und
+-- destillierte Profil-Notizen (gehen in den Kontext künftiger Gespräche).
+-- Siehe docs/chat-guide-konzept.md, Abschnitt "Transkripte & Nutzer-Profil".
+create table if not exists public.chat_transcripts (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  device_id text,
+  messages jsonb not null default '[]'::jsonb,
+  mood_ids jsonb not null default '[]'::jsonb,
+  state_goal text,
+  recommended_id text,
+  crisis boolean not null default false
+);
+
+create table if not exists public.user_profile_notes (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  device_id text not null,
+  note text not null
+);
+create index if not exists user_profile_notes_device_idx
+  on public.user_profile_notes (device_id);
+
+alter table public.chat_transcripts enable row level security;
+alter table public.user_profile_notes enable row level security;
+grant all on public.chat_transcripts to service_role;
+grant all on public.user_profile_notes to service_role;

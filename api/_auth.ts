@@ -22,8 +22,22 @@ export function buildSessionCookie(): string {
   return parts.join('; ');
 }
 
-/** Verifies the request carries a valid session cookie. */
+/**
+ * App-Clients (Flutter) authentifizieren sich per `Authorization: Bearer`
+ * gegen ein eigenes Token (`APP_API_TOKEN`) — getrennt vom SESSION_SECRET,
+ * damit es unabhängig rotiert werden kann, ohne Web-Sessions zu invalidieren.
+ */
+function hasValidBearer(req: VercelRequest): boolean {
+  const expected = process.env.APP_API_TOKEN;
+  if (!expected) return false;
+  const header = req.headers.authorization ?? '';
+  if (!header.startsWith('Bearer ')) return false;
+  return header.slice('Bearer '.length).trim() === expected;
+}
+
+/** Verifies the request carries a valid session cookie or app bearer token. */
 export function isAuthenticated(req: VercelRequest): boolean {
+  if (hasValidBearer(req)) return true;
   const token = sessionToken();
   if (!token) return false;
   const cookie = req.headers.cookie ?? '';
