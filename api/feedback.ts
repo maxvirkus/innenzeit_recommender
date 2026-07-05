@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { requireAuth } from './_auth.js';
+import { EXERCISES } from '../src/data/exercises.js';
 
 const TABLE = 'session_feedback';
 
@@ -37,7 +38,10 @@ export default async function handler(
       state_goal: b.stateGoal,
       long_term_goals: b.longTermGoals ?? [],
       rating: b.rating,
-      family: b.family ?? null,
+      family:
+        b.family ??
+        EXERCISES.find((e) => e.id === b.practiceId)?.family ??
+        null,
       explanation_clarity: b.explanationClarity ?? null,
       instructions_quality: b.instructionsQuality ?? null,
       voice_delivery_quality: b.voiceDeliveryQuality ?? null,
