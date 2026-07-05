@@ -2156,3 +2156,102 @@ details.calc-step > summary.calc-step-head:hover .calc-step-chevron {
   }
 }
 
+
+/* -----------------------------------------------------------------------
+   Guide-Chat (Weg 2: ausschütten · präzisieren · validieren)
+   ----------------------------------------------------------------------- */
+.guide-chat-open {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+}
+.guide-chat-open:hover {
+  filter: brightness(1.08);
+}
+.guide-chat-hint {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 10px 0 0;
+}
+.guide-chat-messages {
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+.guide-chat-bubble {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.guide-chat-bubble.user {
+  align-self: flex-end;
+  background: var(--accent);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.guide-chat-bubble.assistant {
+  align-self: flex-start;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+.guide-chat-refined {
+  border: 1px solid var(--accent-soft);
+  background: var(--accent-soft);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+.guide-chat-refined .reason {
+  background: var(--surface);
+}
+.guide-chat-caution {
+  color: #a4553a;
+  font-size: 13px;
+  margin: 8px 0 0;
+}
+.guide-chat-error {
+  color: #a4553a;
+  font-size: 13px;
+}
+.guide-chat-input {
+  display: flex;
+  gap: 8px;
+}
+.guide-chat-input input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  background: var(--surface);
+}
+.guide-chat-input button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+.guide-chat-input button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.guide-chat-disclaimer {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin: 10px 0 0;
+}

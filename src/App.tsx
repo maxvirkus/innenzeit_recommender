@@ -7,6 +7,7 @@ import { CalculationWalkthrough } from './components/CalculationWalkthrough';
 import { BackgroundPage } from './components/BackgroundPage';
 import { CombinatoricsExplorer } from './components/CombinatoricsExplorer';
 import { SettingsPanel } from './components/SettingsPanel';
+import { GuideChat } from './components/GuideChat';
 import { FeedbackPanel } from './components/FeedbackPanel';
 import { ProfileSummary } from './components/ProfileSummary';
 import { PasswordGate } from './components/PasswordGate';
@@ -152,6 +153,17 @@ function RecommenderApp() {
             <RecommendationResult result={result} />
           ) : (
             <div className="empty">Bitte mindestens einen Zustand wählen.</div>
+          )}
+
+          {hasSelection && (
+            <GuideChat
+              key={selected.join(',')}
+              selectedMoodIds={selected}
+              timeOfDay={timeOfDay}
+              settings={settings}
+              history={history}
+              recentlyServed={recentlyServed}
+            />
           )}
 
           {hasSelection && (
