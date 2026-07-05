@@ -1,5 +1,5 @@
-import { MOODS_BY_ID } from '../data/moods';
-import type { MoodId, MoodProfile } from './types';
+import { MOODS_BY_ID } from '../data/moods.js';
+import type { MoodId, MoodProfile } from './types.js';
 
 const EMPTY: MoodProfile = {
   valence: 0,

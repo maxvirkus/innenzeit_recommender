@@ -1,4 +1,4 @@
-import type { Exercise } from '../domain/types';
+import type { Exercise } from '../domain/types.js';
 
 /**
  * Exercise catalogue. Each practice carries:

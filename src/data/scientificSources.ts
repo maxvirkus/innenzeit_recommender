@@ -1,4 +1,4 @@
-import type { Mechanism, PracticeFamily } from '../domain/types';
+import type { Mechanism, PracticeFamily } from '../domain/types.js';
 
 /**
  * A single scientific source. Kept deliberately lightweight: enough to show a

@@ -1,4 +1,4 @@
-import type { Exercise } from './types';
+import type { Exercise } from './types.js';
 
 /**
  * Returns a short German safety note when a practice is physically intense,

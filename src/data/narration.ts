@@ -1,4 +1,4 @@
-import type { Narration } from '../domain/types';
+import type { Narration } from '../domain/types.js';
 
 /**
  * Pre-generated narration (audio + timed lines), keyed by exercise id.

@@ -3,7 +3,7 @@ import type {
   MoodProfile,
   StateGoal,
   TimeOfDay,
-} from './types';
+} from './types.js';
 
 /** Why a particular state goal was chosen — used for transparent UI. */
 export interface StateGoalExplanation {

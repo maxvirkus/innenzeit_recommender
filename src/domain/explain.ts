@@ -4,7 +4,7 @@ import type {
   ScoreBreakdown,
   ScoredExercise,
   StateGoal,
-} from './types';
+} from './types.js';
 
 /** Human-readable German labels for the short-term state goal. */
 export const STATE_GOAL_LABELS: Record<StateGoal, string> = {

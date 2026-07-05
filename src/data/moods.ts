@@ -1,4 +1,4 @@
-import type { Mood } from '../domain/types';
+import type { Mood } from '../domain/types.js';
 
 export const MOODS: Mood[] = [
   {

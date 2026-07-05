@@ -4,7 +4,7 @@ import type {
   MoodProfile,
   TimeOfDay,
   UserSettings,
-} from './types';
+} from './types.js';
 
 export interface SafetyDecision {
   allowed: boolean;

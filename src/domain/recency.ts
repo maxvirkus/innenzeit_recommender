@@ -1,4 +1,4 @@
-import type { ExerciseId, SessionFeedback } from './types';
+import type { ExerciseId, SessionFeedback } from './types.js';
 
 /**
  * Width of the "tolerance band" around the top score. Exercises whose score is

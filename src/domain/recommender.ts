@@ -1,10 +1,10 @@
-import { EXERCISES } from '../data/exercises';
-import { calculateMoodProfile } from './calculateMoodProfile';
-import { describeCaution } from './caution';
-import { deriveStateGoal } from './deriveStateGoal';
-import { calculateRecencyPenalty, TOLERANCE_BAND } from './recency';
-import { isAllowedBySafetyRules } from './safetyRules';
-import { calculateFinalScore } from './scoring';
+import { EXERCISES } from '../data/exercises.js';
+import { calculateMoodProfile } from './calculateMoodProfile.js';
+import { describeCaution } from './caution.js';
+import { deriveStateGoal } from './deriveStateGoal.js';
+import { calculateRecencyPenalty, TOLERANCE_BAND } from './recency.js';
+import { isAllowedBySafetyRules } from './safetyRules.js';
+import { calculateFinalScore } from './scoring.js';
 import type {
   Exercise,
   ExcludedExercise,
@@ -16,7 +16,7 @@ import type {
   StateGoal,
   TimeOfDay,
   UserSettings,
-} from './types';
+} from './types.js';
 
 /** Conservative defaults for a brand-new user in the UI. */
 export const DEFAULT_USER_SETTINGS: UserSettings = {

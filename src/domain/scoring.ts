@@ -9,7 +9,7 @@ import type {
   StateGoal,
   TimeOfDay,
   UserSettings,
-} from './types';
+} from './types.js';
 
 /**
  * Turns an experience tier into a 0..1 factor. Used to scale how strongly an
