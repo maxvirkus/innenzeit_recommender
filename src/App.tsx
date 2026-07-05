@@ -7,6 +7,7 @@ import { CalculationWalkthrough } from './components/CalculationWalkthrough';
 import { BackgroundPage } from './components/BackgroundPage';
 import { CombinatoricsExplorer } from './components/CombinatoricsExplorer';
 import { SettingsPanel } from './components/SettingsPanel';
+import { AnalyticsPage } from './components/AnalyticsPage';
 import { GuideChat } from './components/GuideChat';
 import { FeedbackPanel } from './components/FeedbackPanel';
 import { ProfileSummary } from './components/ProfileSummary';
@@ -49,7 +50,7 @@ export default function App() {
   return <AuthedApp />;
 }
 
-type Tab = 'recommender' | 'combinatorics' | 'background';
+type Tab = 'recommender' | 'combinatorics' | 'background' | 'analytics';
 
 function AuthedApp() {
   const [tab, setTab] = useState<Tab>('recommender');
@@ -75,11 +76,18 @@ function AuthedApp() {
         >
           Hintergrund
         </button>
+        <button
+          className={tab === 'analytics' ? 'active' : ''}
+          onClick={() => { setTab('analytics'); track('tab_switch', { tab: 'analytics' }); }}
+        >
+          Auswertung
+        </button>
       </nav>
 
       {tab === 'recommender' && <RecommenderApp />}
       {tab === 'combinatorics' && <CombinatoricsExplorer />}
       {tab === 'background' && <BackgroundPage />}
+      {tab === 'analytics' && <AnalyticsPage />}
     </div>
   );
 }
