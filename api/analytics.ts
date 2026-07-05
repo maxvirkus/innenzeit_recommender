@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 import { requireAuth } from './_auth.js';
 import { EXERCISES } from '../src/data/exercises.js';
+import { MOODS } from '../src/data/moods.js';
 import { STATE_GOAL_LABELS } from '../src/domain/explain.js';
 
 /**
@@ -133,6 +134,26 @@ function buildSummary(data: NonNullable<Awaited<ReturnType<typeof loadData>>>) {
           STATE_GOAL_LABELS[r.state_goal as keyof typeof STATE_GOAL_LABELS] ??
           r.state_goal,
       ),
+      // Bewertung je gewählter Stimmung: ein Feedback zählt für jede seiner
+      // Stimmungen (Mehrfachauswahl im Mood-Check).
+      byMood: groupStats(
+        feedback.flatMap((r) =>
+          (r.selected_mood_ids ?? []).map((moodId) => ({
+            ...r,
+            practice_id: moodId,
+          })),
+        ),
+        (r) => MOODS.find((m) => m.id === r.practice_id)?.label ?? r.practice_id,
+      ),
+      // Welche Übung wurde bei welcher Stimmung wie bewertet (für
+      // Zustands-Ableitungen in der LLM-Auswertung).
+      moodPracticePairs: feedback.slice(0, 100).map((r) => ({
+        moods: (r.selected_mood_ids ?? []).map(
+          (id) => MOODS.find((m) => m.id === id)?.label ?? id,
+        ),
+        practice: titleOf(r.practice_id),
+        rating: r.rating,
+      })),
       comments: feedback
         .filter((r) => r.comment || r.better_fit)
         .slice(0, 50)
@@ -178,13 +199,14 @@ function buildSummary(data: NonNullable<Awaited<ReturnType<typeof loadData>>>) {
 
 const INSIGHTS_PROMPT = `Du bist Produkt-Analyst der Achtsamkeits-App Innenzeit. Du bekommst aggregierte Kennzahlen, Nutzer-Feedback (Bewertungen + Freitext), Chat-Transkripte mit dem LLM-Guide und destillierte Profil-Notizen.
 
-Erstelle eine kompakte Auswertung auf Deutsch mit genau diesen Abschnitten:
+Erstelle eine kompakte Auswertung auf Deutsch (Markdown erlaubt: Überschriften, Listen, Fettung) mit genau diesen Abschnitten:
 1. WAS GUT FUNKTIONIERT – belegt mit konkreten Zahlen/Zitaten aus den Daten.
 2. SCHMERZPUNKTE – wiederkehrende Beschwerden, schlecht bewertete Übungen/Aspekte, Abbruchmuster in den Chats.
 3. THEMEN DER NUTZER – worüber reden sie im Chat (Cluster mit Häufigkeitseindruck).
-4. KONKRETE ABLEITUNGEN – 3–7 priorisierte, umsetzbare Empfehlungen (Produkt, Übungskatalog, Guide-Prompt, Recommender-Gewichte).
+4. ABLEITUNGEN JE ZUSTAND – nutze die Stimmungs-Bewertungen und die Stimmung↔Übung↔Bewertung-Paare: Welche Übungen/Familien funktionieren für welche Zustände gut oder schlecht? Wo widerspricht das Feedback der aktuellen Empfehlungslogik? Je Zustand 1 Zeile mit Beleg.
+5. KONKRETE ABLEITUNGEN – 3–7 priorisierte, umsetzbare Empfehlungen (Produkt, Übungskatalog, Guide-Prompt, Recommender-Gewichte), jeweils mit dem Datenpunkt, der sie begründet.
 
-Regeln: Stütze jede Aussage auf die Daten (zitiere kurz oder nenne Zahlen). Erfinde nichts; bei dünner Datenlage sag das explizit. Anonymität wahren (keine Geräte-IDs zitieren). Reiner Fließtext mit Nummerierung, kein Markdown.`;
+Regeln: Stütze jede Aussage auf die Daten (zitiere kurz oder nenne Zahlen). Erfinde nichts; bei dünner Datenlage sag das explizit (n nennen). Anonymität wahren (keine Geräte-IDs zitieren).`;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!requireAuth(req, res)) return;

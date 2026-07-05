@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { track } from '@vercel/analytics/react';
 
 /**
@@ -24,6 +25,7 @@ interface Summary {
     byPractice: GroupStat[];
     byFamily: GroupStat[];
     byStateGoal: GroupStat[];
+    byMood: GroupStat[];
     comments: {
       created_at: string;
       practice: string;
@@ -163,16 +165,21 @@ export function AnalyticsPage() {
       </div>
 
       <div className="card analytics-insights">
-        <h3>Erkenntnisse (Claude)</h3>
+        <h3>Erkenntnisse</h3>
         <button onClick={generateInsights} disabled={busy}>
           {busy ? 'Analysiere …' : 'Erkenntnisse generieren'}
         </button>
-        {insights && <pre className="analytics-insights-text">{insights}</pre>}
+        {insights && (
+          <div className="analytics-insights-text">
+            <ReactMarkdown>{insights}</ReactMarkdown>
+          </div>
+        )}
       </div>
 
       <GroupTable title="Bewertung je Übung" rows={f.byPractice} />
       <GroupTable title="Bewertung je Übungsfamilie" rows={f.byFamily} />
       <GroupTable title="Bewertung je Zustandsziel" rows={f.byStateGoal} />
+      <GroupTable title="Bewertung je Stimmung (Mood-Check)" rows={f.byMood} />
 
       {c.topHandoffExercises.length > 0 && (
         <div className="card">
