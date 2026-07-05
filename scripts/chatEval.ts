@@ -11,8 +11,9 @@
  * Szenario „Krise“ funktioniert auch ohne ANTHROPIC_API_KEY (serverseitiger
  * Check vor dem Modellaufruf); alle anderen brauchen den Key.
  */
-import { EXERCISES } from '../src/data/exercises';
-import type { MoodId, PracticeFamily } from '../src/domain/types';
+import { EXERCISES } from '../src/data/exercises.js';
+import { recommendExercises } from '../src/domain/recommender.js';
+import type { MoodId, PracticeFamily } from '../src/domain/types.js';
 
 const URL = process.env.CHAT_URL ?? 'http://localhost:3000/api/chat';
 
@@ -39,6 +40,11 @@ async function chat(
   const headers: Record<string, string> = { 'content-type': 'application/json' };
   if (process.env.CHAT_BEARER) headers.authorization = `Bearer ${process.env.CHAT_BEARER}`;
   if (process.env.CHAT_COOKIE) headers.cookie = `iz_auth=${process.env.CHAT_COOKIE}`;
+  // Vercel Deployment Protection (Preview): Bypass-Secret aus
+  // "Protection Bypass for Automation".
+  if (process.env.CHAT_BYPASS) {
+    headers['x-vercel-protection-bypass'] = process.env.CHAT_BYPASS;
+  }
 
   const res = await fetch(URL, {
     method: 'POST',
@@ -99,11 +105,19 @@ const SCENARIOS: Scenario[] = [
     turns: ['Ich bin gestresst, habe aber wirklich nur 3 Minuten Zeit. Was passt da?'],
     moods: ['stressed'],
     check: (r) => {
-      if (!r.recommendation) return 'keine verfeinerte Empfehlung';
-      if (r.recommendation.durationMinutes > 3) {
-        return `Übung dauert ${r.recommendation.durationMinutes} Min (> 3)`;
+      if (r.recommendation) {
+        return r.recommendation.durationMinutes <= 3
+          ? null
+          : `Übung dauert ${r.recommendation.durationMinutes} Min (> 3)`;
       }
-      return null;
+      // Kein Tool-Call ist korrekt, wenn die Basis-Empfehlung das Limit
+      // bereits erfüllt (Guide validiert dann nur).
+      const base = recommendExercises({
+        selectedMoodIds: ['stressed'],
+        timeOfDay: 'evening',
+      }).primary;
+      if (base && base.durationMinutes <= 3) return null;
+      return 'keine verfeinerte Empfehlung, obwohl Basis > 3 Min';
     },
   },
   {
