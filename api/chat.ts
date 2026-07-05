@@ -75,6 +75,8 @@ interface ChatContext {
   recentlyServed?: string[];
   /** Destillierte Notizen aus früheren Gesprächen (siehe Konzept-Doku). */
   profileNotes?: string[];
+  /** Frühere Mood-IDs (vor diesem Check) – für die Reflexion nach dem Mood-Check. */
+  moodHistory?: string[];
   /** Lokale Uhrzeit des Nutzers, z. B. "22:41". */
   localTime?: string;
 }
@@ -83,6 +85,11 @@ interface ChatRequestBody {
   deviceId?: string;
   messages: ChatMessage[];
   context: ChatContext;
+  /**
+   * 'chat' (Default): Gespräch mit Tools. 'reflection': einmalige, kurze
+   * Guide-Reflexion direkt nach dem Mood-Check (kein Tool, keine Übung).
+   */
+  mode?: 'chat' | 'reflection';
 }
 
 interface RecommendationPayload {
@@ -202,6 +209,17 @@ Harte Regeln:
 - Antworte kurz (2–4 Sätze), entschleunigt, ohne Druck. Höchstens eine Frage pro Antwort.
 - Reiner Fließtext: kein Markdown, keine Fettung, keine Listen, keine Überschriften, keine Emojis.
 - Erwähne die empfohlene Übung nur, wenn der Nutzer danach fragt, das Gespräch natürlich dort ankommt oder er bereit wirkt.`;
+
+/**
+ * System-Prompt für die einmalige Reflexion direkt nach dem Mood-Check
+ * (ersetzt die statische Client-Schablone „…ähnlich wie letztes Mal“).
+ */
+const REFLECTION_PROMPT = `Du bist der „Guide“ der Achtsamkeits-App Innenzeit – ruhig, warm, wertfrei. Du sprichst Deutsch und duzt.
+
+Der Nutzer hat gerade im Mood-Check seine Stimmungen gewählt. Formuliere eine kurze Reflexion (2–3 Sätze), die ihm das Gefühl gibt, gesehen zu werden:
+- Geh konkret auf die gewählten Stimmungen ein – nicht nur aufzählen, sondern kurz deuten, wie sich diese Kombination anfühlen kann.
+- Liegen frühere Stimmungen vor, greife Wandel oder Ähnlichkeit behutsam auf – ohne Zahlen, ohne Bewertung, und jedes Mal anders formuliert. Keine Floskeln wie „ähnlich wie letztes Mal“.
+- Keine Übung erwähnen, kein Ratschlag, keine Diagnose. Reiner Fließtext ohne Markdown. Höchstens eine sanfte, offene Frage am Ende.`;
 
 /** Eröffnungs-Anweisung, wenn der Client noch keine Nachrichten hat. */
 const OPENING_TURN =
@@ -427,6 +445,62 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   ctx.history = ctx.history?.slice(-10);
   ctx.profileNotes = ctx.profileNotes?.slice(0, 20).map((n) => String(n).slice(0, 300));
+
+  // Einmalige Guide-Reflexion nach dem Mood-Check (kein Tool, keine Übung).
+  if (body.mode === 'reflection') {
+    const previous = (ctx.moodHistory ?? [])
+      .filter((m) => MOOD_IDS.includes(m as MoodId))
+      .slice(-15);
+    const label = (id: string) => MOODS.find((m) => m.id === id)?.label ?? id;
+    const moodLabels = ctx.selectedMoodIds.map(label).join(', ');
+    const prevLabels = previous.map(label).join(', ');
+    try {
+      const client = new Anthropic();
+      const response = await client.messages.create({
+        model: MODEL,
+        max_tokens: 300,
+        system: [
+          {
+            type: 'text',
+            text: REFLECTION_PROMPT,
+            cache_control: { type: 'ephemeral' },
+          },
+        ],
+        messages: [
+          {
+            role: 'user',
+            content:
+              `Gewählte Stimmungen: ${moodLabels}.\n` +
+              (prevLabels
+                ? `Frühere Stimmungen (letzte Sessions, chronologisch): ${prevLabels}.`
+                : 'Keine früheren Sessions bekannt – vermutlich der erste Besuch.') +
+              `\nTageszeit: ${ctx.timeOfDay}${ctx.localTime ? ` (${ctx.localTime} Uhr)` : ''}.`,
+          },
+        ],
+      });
+      const text = response.content
+        .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+        .map((b) => b.text)
+        .join('')
+        .trim();
+      const reply =
+        stripMarkdown(text) || 'Schön, dass du da bist. Nimm dir einen Moment, um anzukommen.';
+      await storeTranscript({
+        device_id: deviceId,
+        messages: [{ role: 'assistant', content: reply }],
+        mood_ids: ctx.selectedMoodIds,
+        state_goal: 'reflection',
+        recommended_id: null,
+        crisis: false,
+      });
+      res.status(200).json({ reply, recommendation: null, ventingOnly: false, crisis: false });
+    } catch {
+      res.status(502).json({
+        error: 'Der Guide ist gerade nicht erreichbar. Versuch es gleich noch einmal.',
+      });
+    }
+    return;
+  }
 
   const lastUser = [...body.messages].reverse().find((m) => m.role === 'user');
 
