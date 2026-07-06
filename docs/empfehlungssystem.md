@@ -74,8 +74,11 @@ können **nie** empfohlen werden. Hilfsgrößen: highStress (`stress ≥ 1.2` od
 (`breathworkExperience === 'none'`), isEvening. Geprüft werden u. a.:
 hoher Stress / müde+gestresst / Schwere+Traurigkeit (Power Breath,
 Zielvisualisierung), `rapid_breathing`, `breath_hold`, niedrige Stabilität +
-Risiko/Tiefe, Abend, sowie L3-Gating für tiefe Praxis (Ausnahme:
-Selbstmitgefühl).
+Risiko/Tiefe, Abend, **Zeit-Affinität** (`timeAffinity`: Morgen-Übung nie
+abends, Abend-Übung – Tagesrückblick/Einschlafen – nie morgens; mittags beides
+erlaubt), sowie das Tiefen-Gating: **tiefe Praxis** öffnet sich bei stabilem
+Befinden für Intensität „intensiv“ *oder* `meditationExperience: 'regular'`
+unter „ausgeglichen“ (Ausnahme: Selbstmitgefühl; „sanft“ bleibt gesperrt).
 
 ---
 
@@ -118,10 +121,34 @@ $$
 
 Sortierung nach `finalScore` absteigend. Tie-Break:
 höherer `evidenceFit` → kürzere Dauer → alphabetisch. **Primär** = höchste Übung,
-die primär sein *darf* (`canBePrimary`, Sonderregeln u. a. für Kohärentes Atmen
-und Dankbarkeits-Reflexion). **Alternativen** = nächste Übungen mit Score > 0
-(max. 2). `RecommendationResult` führt zusätzlich `scoreGap` und
+die primär sein *darf* (`canBePrimary`): Übungen mit
+`environment: 'space_to_move'` (Gehende Erdung) sind nie primär — die App
+verspricht Umgebungsunabhängigkeit —, bleiben aber als Alternative und im
+Konfigurator erreichbar; dazu Sonderregeln u. a. für Kohärentes Atmen und
+Dankbarkeits-Reflexion. **Alternativen** = beste Übungen mit Score > 0 aus
+*anderen Familien* als die Primär-Empfehlung, max. eine pro Familie (max. 2
+gesamt); reicht die erlaubte Menge nicht, wird mit den nächstbesten
+aufgefüllt. `RecommendationResult` führt zusätzlich `scoreGap` und
 `hasCloseAlternative` (Abstand < 0,3) für die UI.
+
+---
+
+## Änderungshistorie (Feedback-getrieben)
+
+**2026-07 — erste Feedback-Runde (n=24, Team):**
+- `environment: 'space_to_move'` + nie-primär-Regel — Gehende Erdung wurde mit
+  Ø 2,0 bewertet („nicht umgebungsunabhängig, passt nicht zum
+  Funktionsprinzip“).
+- `timeAffinity` + harter Zeit-Filter — Morgen-Aktivierung erschien abends als
+  Alternative; die Dankbarkeits-Reflexion („Was war heute gut?“) wurde morgens
+  empfohlen (1★).
+- Alternativen-Diversität (max. eine pro Familie, andere als primär) — „es
+  fehlen oftmals Meditationen/Bodyscan als Alternative“.
+- Tiefen-Gating gelockert (stabil + `regular` reicht unter „ausgeglichen“) —
+  „bei neutraler Stimmung und fortgeschrittenem User auch tiefergehende
+  Übungen“.
+- Bewusst **nicht** angepasst: Score-Gewichte (n zu klein, Ratings stark
+  rechtsschief — Strukturfixes statt Zahlen-Tuning).
 
 ---
 

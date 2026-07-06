@@ -336,3 +336,99 @@ describe('instructions – guided playback data', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// Feedback-Runde 2026-07 (siehe docs/empfehlungssystem.md → Änderungshistorie)
+// ---------------------------------------------------------------------------
+
+describe('Zeit-Affinität (Team-Feedback: Morning-Aktivierung abends, Dankbarkeit morgens)', () => {
+  const allMoodCombos: MoodId[][] = MOODS.map((m) => [m.id]);
+
+  it('bietet Morgen-Übungen abends weder als Empfehlung noch als Alternative an', () => {
+    for (const moods of allMoodCombos) {
+      const r = run(moods, 'evening');
+      const surfaced = [r.primary, ...r.alternatives].filter(Boolean);
+      expect(surfaced.map((e) => e!.id)).not.toContain('morning_activation');
+    }
+  });
+
+  it('bietet Abend-Übungen (Dankbarkeits-Reflexion, Einschlaf-Bodyscan) morgens nicht an', () => {
+    for (const moods of allMoodCombos) {
+      const r = run(moods, 'morning');
+      const surfaced = [r.primary, ...r.alternatives].filter(Boolean);
+      expect(surfaced.map((e) => e!.id)).not.toContain('gratitude_reflection');
+      expect(surfaced.map((e) => e!.id)).not.toContain('sleep_body_scan');
+    }
+  });
+
+  it('lässt Zeit-gebundene Übungen zur passenden Zeit im Rennen (erreichbar)', () => {
+    const r = run(['neutral'], 'morning');
+    expect(
+      r.scoredExercises.some((s) => s.exercise.id === 'morning_activation'),
+    ).toBe(true);
+    const evening = run(['neutral'], 'evening');
+    expect(
+      evening.scoredExercises.some((s) => s.exercise.id === 'gratitude_reflection'),
+    ).toBe(true);
+  });
+});
+
+describe('Umgebungsunabhängigkeit (Team-Feedback: Gehende Erdung Ø 2,0)', () => {
+  it('macht Übungen mit Platzbedarf nie zur Primär-Empfehlung', () => {
+    for (const mood of MOODS) {
+      for (const time of ['morning', 'midday', 'evening'] as TimeOfDay[]) {
+        const r = run([mood.id], time);
+        expect(r.primary?.id).not.toBe('walking_grounding');
+      }
+    }
+  });
+
+  it('hält Gehende Erdung als erlaubte (wählbare) Übung im Topf', () => {
+    const r = run(['tired'], 'midday');
+    expect(
+      r.scoredExercises.some((s) => s.exercise.id === 'walking_grounding'),
+    ).toBe(true);
+  });
+});
+
+describe('Alternativen-Diversität (Team-Feedback: „es fehlen Meditationen/Bodyscan“)', () => {
+  it('wählt Alternativen bevorzugt aus anderen Familien als die Empfehlung', () => {
+    for (const mood of MOODS) {
+      const r = run([mood.id], 'midday');
+      if (!r.primary || r.alternatives.length < 2) continue;
+      const families = r.alternatives.map((a) => a.family);
+      // Alternativen untereinander verschieden …
+      expect(new Set(families).size).toBe(families.length);
+      // … und (wenn genug Familien erlaubt sind) verschieden von der Empfehlung.
+      const allowedFamilies = new Set(r.scoredExercises.map((s) => s.exercise.family));
+      if (allowedFamilies.size >= 3) {
+        for (const f of families) expect(f).not.toBe(r.primary.family);
+      }
+    }
+  });
+});
+
+describe('Tiefenpraxis-Freischaltung (Team-Feedback: Erfahrene bei stabiler Lage)', () => {
+  const experienced: UserSettings = {
+    longTermGoals: ['calm'],
+    breathworkExperience: 'some',
+    meditationExperience: 'regular',
+    practiceIntensity: 'balanced',
+  };
+  const beginner: UserSettings = { ...experienced, meditationExperience: 'none' };
+
+  it('erlaubt tiefe Übungen für erfahrene Meditierende auch bei „ausgeglichen“', () => {
+    const r = run(['content'], 'evening', { userSettings: experienced });
+    expect(
+      r.scoredExercises.some((s) => s.exercise.depthCategory === 'deep'),
+    ).toBe(true);
+  });
+
+  it('hält tiefe Übungen für Anfänger:innen bei „ausgeglichen“ gesperrt', () => {
+    const r = run(['content'], 'evening', { userSettings: beginner });
+    const deepAllowed = r.scoredExercises.filter(
+      (s) => s.exercise.depthCategory === 'deep' && s.exercise.id !== 'self_compassion',
+    );
+    expect(deepAllowed).toHaveLength(0);
+  });
+});

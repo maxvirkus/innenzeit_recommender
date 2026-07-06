@@ -55,6 +55,12 @@ function canBePrimary(
   stateGoal: StateGoal,
   profile: MoodProfile,
 ): boolean {
+  // Übungen mit Platz-/Bewegungsbedarf (z. B. Gehende Erdung) nie automatisch
+  // als Primär-Empfehlung: die App verspricht Umgebungsunabhängigkeit
+  // (Team-Feedback, Ø 2,0). Als Alternative und im freien Konfigurator
+  // bleiben sie erreichbar – wer sie wählt, weiß, wo er gerade ist.
+  if (exercise.environment === 'space_to_move') return false;
+
   // Coherent breathing: keep it out of the primary slot for acute stress and
   // for activation / emotional support.
   if (exercise.id === 'coherent_breathing') {
@@ -164,11 +170,29 @@ export function recommendExercises(
 
   // Alternatives must clear a minimum quality bar, so a clearly unfitting
   // practice (negative score) is never surfaced as a "good alternative".
-  const alternatives = allowed
-    .filter((_, i) => i !== primaryIndex)
-    .filter((s) => s.score > 0)
-    .slice(0, 2)
-    .map((s) => s.exercise);
+  // Diversität (Team-Feedback „es fehlen Meditationen/Bodyscan als
+  // Alternative“): bevorzugt die beste Übung aus *anderen* Familien als der
+  // Primär-Empfehlung, max. eine pro Familie. Reicht die erlaubte Menge dafür
+  // nicht, wird mit den nächstbesten Übungen aufgefüllt.
+  const primaryFamily = primary?.family;
+  const seenFamilies = new Set<string>();
+  const alternatives: Exercise[] = [];
+  for (const s of allowed) {
+    if (s.exercise.id === primary?.id || s.score <= 0) continue;
+    if (s.exercise.family === primaryFamily) continue;
+    if (seenFamilies.has(s.exercise.family)) continue;
+    seenFamilies.add(s.exercise.family);
+    alternatives.push(s.exercise);
+    if (alternatives.length === 2) break;
+  }
+  if (alternatives.length < 2) {
+    for (const s of allowed) {
+      if (s.exercise.id === primary?.id || s.score <= 0) continue;
+      if (alternatives.some((a) => a.id === s.exercise.id)) continue;
+      alternatives.push(s.exercise);
+      if (alternatives.length === 2) break;
+    }
+  }
 
   // Closeness of the runner-up — surfaced as "ähnlich passend" in the UI.
   const scoreGap =

@@ -201,6 +201,19 @@ export interface Exercise {
   /** Breath technique, used by the hard safety filters. */
   breathTechnique: BreathTechnique;
   /**
+   * Inhaltliche Tageszeit-Bindung. Übungen mit Affinität werden zur
+   * Gegen-Tageszeit hart ausgeschlossen (morning ↛ evening und umgekehrt),
+   * bleiben zur passenden Zeit und im freien Konfigurator erreichbar.
+   */
+  timeAffinity?: 'morning' | 'evening' | null;
+  /**
+   * Umgebungs-Anforderung. 'anywhere' (Default) = überall durchführbar;
+   * 'space_to_move' = braucht Platz/Bewegung und wird deshalb nie automatische
+   * Primär-Empfehlung (Funktionsprinzip: App muss überall funktionieren),
+   * bleibt aber als Alternative und im Konfigurator wählbar.
+   */
+  environment?: 'anywhere' | 'space_to_move';
+  /**
    * Time-boxed guidance steps for guided playback. The sum of all
    * `durationSeconds` equals `durationMinutes * 60`.
    */

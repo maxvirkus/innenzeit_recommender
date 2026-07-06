@@ -22,7 +22,7 @@ const PIPELINE: { title: string; desc: string }[] = [
   },
   {
     title: 'Sicherheitsfilter',
-    desc: 'Riskante Übungen werden hart ausgeschlossen, der Rest behutsam dosiert.',
+    desc: 'Riskante, zeitlich unpassende oder zu tiefe Übungen werden hart ausgeschlossen, der Rest behutsam dosiert.',
   },
   {
     title: 'Scoring',
@@ -30,7 +30,7 @@ const PIPELINE: { title: string; desc: string }[] = [
   },
   {
     title: 'Ranking',
-    desc: 'Bester Score = Empfehlung, danach zwei Alternativen.',
+    desc: 'Bester Score = Empfehlung (nur überall durchführbare Übungen), dazu zwei Alternativen aus anderen Familien.',
   },
 ];
 
@@ -234,9 +234,13 @@ export function BackgroundPage() {
         <p className="intro">
           Sicherheit wirkt auf zwei Ebenen. Zuerst ein <strong>harter
           Filter</strong>: riskante oder unpassende Übungen werden ganz
-          ausgeschlossen (z. B. intensive Atemtechniken bei hohem Stress,
-          Tiefenpraxis nur bei Intensität „intensiv &amp; tief“ und stabilem
-          Befinden). Danach ein{' '}
+          ausgeschlossen (z. B. intensive Atemtechniken bei hohem Stress).
+          Dazu gehören auch <strong>zeitgebundene Übungen</strong> zur
+          Gegen-Tageszeit — Morgen-Aktivierung erscheint nie abends, der
+          Tagesrückblick der Dankbarkeits-Reflexion und der Einschlaf-Bodyscan
+          nie morgens (Team-Feedback). <strong>Tiefenpraxis</strong> öffnet
+          sich bei stabilem Befinden für Intensität „intensiv“ <em>oder</em>{' '}
+          regelmäßige Meditationserfahrung. Danach ein{' '}
           <strong>weicher Sicherheits-Faktor</strong>, der erlaubte, aber für den
           aktuellen Zustand etwas fordernde Übungen behutsamer dosiert, statt sie
           komplett auszuschließen. Was hart ausgeschlossen wird, zeigt der

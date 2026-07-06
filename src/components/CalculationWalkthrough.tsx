@@ -219,9 +219,13 @@ export function CalculationWalkthrough({
         </summary>
         <p className="calc-note">
           Bevor bewertet wird, fliegen riskante oder unpassende Übungen raus –
-          unabhängig vom Zustandsziel. Was hier ausgeschlossen wird, kann gar
-          nicht erst empfohlen werden. Danach wird jede erlaubte Übung je nach
-          Zustand noch behutsamer dosiert.
+          unabhängig vom Zustandsziel. Dazu gehört auch die Tageszeit: Übungen
+          mit inhaltlicher Zeitbindung (Morgen-Aktivierung, Tagesrückblick,
+          Einschlaf-Bodyscan) sind zur Gegen-Tageszeit ausgeschlossen. Tiefe
+          Übungen öffnen sich bei stabilem Befinden für Intensität „intensiv“
+          oder regelmäßige Meditationserfahrung. Was hier ausgeschlossen wird,
+          kann gar nicht erst empfohlen werden; danach wird jede erlaubte Übung
+          je nach Zustand noch behutsamer dosiert.
         </p>
         {excluded.length === 0 ? (
           <div className="calc-callout calc-callout-ok">
@@ -328,7 +332,13 @@ export function CalculationWalkthrough({
         </summary>
         <p className="calc-note">
           Alle erlaubten Übungen werden verglichen. Die passendste wird zur
-          Hauptempfehlung, die nächsten zu Alternativen.
+          Hauptempfehlung – Übungen mit Platz-/Bewegungsbedarf (z.&nbsp;B.
+          Gehende Erdung) überspringt der Algorithmus dabei, weil die App
+          überall funktionieren soll; sie bleiben als Alternative und im
+          Konfigurator wählbar. Die Alternativen kommen bevorzugt aus{' '}
+          <em>anderen</em> Übungsfamilien als die Empfehlung (max. eine pro
+          Familie), damit die Auswahl Breite zeigt statt dreimal dasselbe
+          Prinzip.
           {result.hasCloseAlternative
             ? ' Mehrere Übungen passen hier ähnlich gut.'
             : ''}

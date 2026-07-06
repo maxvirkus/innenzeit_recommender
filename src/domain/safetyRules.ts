@@ -119,20 +119,41 @@ export function isAllowedBySafetyRules(
   if (isEvening && exercise.id === 'power_breath')
     return { allowed: false, reason: 'Abend: Power Breath ausgeschlossen' };
 
+  // --- Zeit-Affinität: inhaltlich gebundene Übungen nicht zur Gegen-Tageszeit ---
+  // Team-Feedback: Morgen-Aktivierung wurde abends als Alternative angeboten,
+  // die Dankbarkeits-Reflexion („Was war heute gut?“) morgens empfohlen. Zur
+  // passenden Tageszeit (und mittags) bleiben diese Übungen normal im Rennen.
+  if (exercise.timeAffinity === 'morning' && timeOfDay === 'evening')
+    return {
+      allowed: false,
+      reason: 'Morgen-Übung passt inhaltlich nicht zum Abend',
+    };
+  if (exercise.timeAffinity === 'evening' && timeOfDay === 'morning')
+    return {
+      allowed: false,
+      reason: 'Abend-Übung (Tagesrückblick/Einschlafen) passt nicht zum Morgen',
+    };
+
   // --- Deep-practice gating ---
-  // Deep practices are only unlocked when the user explicitly chose the
-  // `intense` intensity *and* the current profile is stable. self_compassion is
+  // Deep practices unlock when the profile is stable *and* the user either
+  // explicitly chose the `intense` intensity or is an experienced meditator on
+  // the `balanced` default (team feedback: stable, experienced users were
+  // locked out of deeper work). `gentle` keeps them locked. self_compassion is
   // intentionally exempt so emotional processing stays available even at low
   // stability.
   if (exercise.depthCategory === 'deep' && exercise.id !== 'self_compassion') {
     const stableProfile =
       profile.stability > -1 && profile.stress < 1.2 && profile.heaviness < 1.5;
+    const experienced = userSettings.meditationExperience === 'regular';
     const allowed =
-      userSettings.practiceIntensity === 'intense' && stableProfile;
+      stableProfile &&
+      (userSettings.practiceIntensity === 'intense' ||
+        (userSettings.practiceIntensity === 'balanced' && experienced));
     if (!allowed)
       return {
         allowed: false,
-        reason: 'Tiefenpraxis nur bei Intensität „intensiv“ und stabilem Befinden',
+        reason:
+          'Tiefenpraxis nur bei stabilem Befinden und Intensität „intensiv“ oder regelmäßiger Meditationserfahrung',
       };
   }
 

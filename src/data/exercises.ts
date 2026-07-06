@@ -546,6 +546,7 @@ export const EXERCISES: Exercise[] = [
   },
   {
     id: 'gratitude_reflection',
+    timeAffinity: 'evening',
     title: 'Dankbarkeits-Reflexion',
     description:
       'Eine kurze Reflexion über drei Dinge, die heute gut waren.',
@@ -876,6 +877,7 @@ export const EXERCISES: Exercise[] = [
   },
   {
     id: 'morning_activation',
+    timeAffinity: 'morning',
     title: 'Morgen-Aktivierung',
     description:
       'Atem und sanftes Dehnen, um wach und mit klarem Kopf in den Tag zu starten.',
@@ -926,6 +928,7 @@ export const EXERCISES: Exercise[] = [
   },
   {
     id: 'walking_grounding',
+    environment: 'space_to_move',
     title: 'Gehende Erdung',
     description:
       'Erden über die Sinne in Bewegung – Grounding mit sanfter Aktivierung.',
@@ -1030,6 +1033,7 @@ export const EXERCISES: Exercise[] = [
   },
   {
     id: 'sleep_body_scan',
+    timeAffinity: 'evening',
     title: 'Einschlaf-Bodyscan',
     description:
       'Eine ruhige Reise durch den Körper zum Loslassen und Einschlafen.',
