@@ -878,7 +878,7 @@ export const EXERCISES: Exercise[] = [
   {
     id: 'morning_activation',
     timeAffinity: 'morning',
-    title: 'Morgen-Aktivierung',
+    title: 'Sanfte Aktivierung',
     description:
       'Atem und sanftes Dehnen, um wach und mit klarem Kopf in den Tag zu starten.',
     durationMinutes: 4,
